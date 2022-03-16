@@ -9,9 +9,9 @@ with open("figurator/version.py") as f:
 	exec(f.read(), env)
 version = env["__version__"]
 
-# # get requirements
-# with open("requirements.txt") as f:
-# 	install_requires = f.readlines()
+# get requirements
+with open("requirements.txt") as f:
+	install_requires = f.readlines()
 
 setuptools.setup(
 	name = "figurator",
@@ -28,5 +28,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
 	],
-	# install_requires=install_requires,
+	install_requires=install_requires,
 )
