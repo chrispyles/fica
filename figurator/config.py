@@ -31,7 +31,7 @@ class Config:
     @classmethod
     def from_list(cls, lst: List[Union["Key", Dict[str, Any]]]) -> "Config":
         """
-        Create a ``Config`` from a list of ``Key``s or ``dict``s.
+        Create a ``Config`` from a list of ``Key`` s or ``dict`` s.
 
         Args:
             lst (``list[Key | dict[str, object]]``): the list of keys
