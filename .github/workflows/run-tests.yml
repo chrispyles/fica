@@ -1,0 +1,32 @@
+name: Run tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+        
+    - name: Install dependencies
+      run: |
+        $CONDA/bin/conda env update -f environment.yml -n base
+        
+    - name: Run pytest
+      run: |
+        make testcov COVERAGE=$CONDA/bin/coverage
+
+    - name: Upload coverage
+      run: |
+        $CONDA/bin/codecov

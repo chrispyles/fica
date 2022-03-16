@@ -32,8 +32,8 @@ test:
 
 testcov:
 	$(COVERAGE) run -m pytest $(TESTPATH) $(PYTESTOPTS) 
-	$(COVERAGE) combine
 
+.PHONY: htmlcov
 htmlcov: testcov
 	$(COVERAGE) html
 

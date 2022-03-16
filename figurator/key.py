@@ -1,7 +1,6 @@
 """Module for configuration keys"""
 
 from dataclasses import dataclass
-from multiprocessing.sharedctypes import Value
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from .config import Config
