@@ -9,22 +9,24 @@ from .config import Config
 
 class _Empty:
     """
-    A class for a singleton object representing an empty default value.
+    A singleton object representing an empty default value.
     """
 
-
-EMPTY = _Empty()
-"""A singleton object representing an empty default value."""
+    def __repr__(self) -> str:
+        return "figurator.EMPTY"
 
 
 class _Subkeys():
     """
-    A class for a singleton object representing that a key's subkeys should be its default value.
+    A singleton object representing that a key's subkeys should be its default value.
     """
 
+    def __repr__(self) -> str:
+        return "figurator.SUBKEYS"
 
+
+EMPTY = _Empty()
 SUBKEYS = _Subkeys()
-"""A singleton object representing that a key's subkeys should be its default value."""
 
 
 @dataclass
@@ -46,15 +48,15 @@ class Key:
 
     Keys have a default value, specified with the ``default`` argument.
 
-    - If ``default`` is :py:obj:`figurator.EMPTY<figurator.key.EMPTY>`, then the key is not
-      included in the resulting configuration unless the user specifies a value.
-    - If ``default`` is :py:obj:`figurator.SUBKEYS<figurator.key.SUBKEYS>`, then the key is
-      defaulted to a dictionary containing each subkey with its default unless the user specifies
+    - If ``default`` is :py:data:`figurator.EMPTY`, then the key is not included in the resulting
+      configuration unless the user specifies a value.
+    - If ``default`` is :py:data:`figurator.SUBKEYS`, then the key is defaulted to a dictionary
+      containing each subkey with its default unless the user specifies
       a value.
     - Otherwise, the key is mapped to the value of ``default``.
 
-    If ``default`` is :py:obj:`figurator.EMPTY<figurator.key.EMPTY>` and subkeys are provided,
-    ``default`` is automatically set to :py:obj:`figurator.SUBKEYS<figurator.key.SUBKEYS>`.
+    If ``default`` is :py:data:`figurator.EMPTY` and subkeys are provided, ``default`` is
+    automatically set to :py:data:`figurator.SUBKEYS`.
 
     Args:
         name (``str``): the name of the key
@@ -144,8 +146,8 @@ class Key:
             user_value (``object``): the value specified by the user
 
         Returns:
-            :py:class:`KeyValuePair`: the key-value pair if the key should be present
-            ``None``: if the key should not be included in the resulting configuration
+            :py:class:`KeyValuePair`: the key-value pair if the key should be present,
+            otherwise ``None``
         """
         value = user_value
         if value is EMPTY:
