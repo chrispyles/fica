@@ -1,9 +1,9 @@
 API Reference
 =============
 
-.. automodule:: figurator
+.. automodule:: fica
     :members:
 
-.. autodata:: figurator.EMPTY
+.. autodata:: fica.EMPTY
 
-.. autodata:: figurator.SUBKEYS
+.. autodata:: fica.SUBKEYS

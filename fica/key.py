@@ -12,7 +12,7 @@ class _Empty:
     """
 
     def __repr__(self) -> str:
-        return "figurator.EMPTY"
+        return "fica.EMPTY"
 
 
 class _Subkeys():
@@ -21,7 +21,7 @@ class _Subkeys():
     """
 
     def __repr__(self) -> str:
-        return "figurator.SUBKEYS"
+        return "fica.SUBKEYS"
 
 
 EMPTY = _Empty()
@@ -47,15 +47,15 @@ class Key:
 
     Keys have a default value, specified with the ``default`` argument.
 
-    - If ``default`` is :py:data:`figurator.EMPTY`, then the key is not included in the resulting
+    - If ``default`` is :py:data:`fica.EMPTY`, then the key is not included in the resulting
       configuration unless the user specifies a value.
-    - If ``default`` is :py:data:`figurator.SUBKEYS`, then the key is defaulted to a dictionary
+    - If ``default`` is :py:data:`fica.SUBKEYS`, then the key is defaulted to a dictionary
       containing each subkey with its default unless the user specifies
       a value.
     - Otherwise, the key is mapped to the value of ``default``.
 
-    If ``default`` is :py:data:`figurator.EMPTY` and subkeys are provided, ``default`` is
-    automatically set to :py:data:`figurator.SUBKEYS`.
+    If ``default`` is :py:data:`fica.EMPTY` and subkeys are provided, ``default`` is
+    automatically set to :py:data:`fica.SUBKEYS`.
 
     Args:
         name (``str``): the name of the key

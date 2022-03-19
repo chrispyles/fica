@@ -1,4 +1,4 @@
-# Makefile for figurator
+# Makefile for fica
 # ----------------------
 # To generate a release, use `make release` with the `VERSION` argument:
 #   $ make release VERSION=0.0.1
@@ -20,8 +20,8 @@ DATE         := $(shell date "+%F")
 
 release:
 	rm dist/* || :
-	echo '__version__ = "$(VERSION)"' > figurator/version.py
-	git add figurator/version.py
+	echo '__version__ = "$(VERSION)"' > fica/version.py
+	git add fica/version.py
 	git commit -m "update version info for v$(VERSION)"
 	python3 setup.py sdist bdist_wheel
 	hub release create -a dist/*.tar.gz -a dist/*.whl -m 'v$(VERSION)' $(VERSION)
