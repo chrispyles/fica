@@ -53,6 +53,13 @@ class Config:
 
     def get_key(self, key: str) -> "Key":
         """
+        Get the :py:class:`fica.Key` with the specified name.
+
+        Args:
+            key (``str``): the name of the key
+
+        Returns:
+            :py:class:`fica.Key`: the key
         """
         return self._get_keys_dict()[key]
 

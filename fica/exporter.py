@@ -11,17 +11,31 @@ from .config import Config
 
 class ConfigExporter(ABC):
     """
+    An abstract base class that converts a :py:class:`fica.Config` object into a documentation
+    string.
     """
 
     @property
     @abstractmethod
     def comment_char(self) -> str:
         """
+        the character(s) used to delimit comments in the language represented by this exporter
         """
         ...
 
     def get_descriptions(self, config: Config, config_dict: Dict[str, Any]) -> List[str]:
         """
+        Get a list of description strings for each configuration in ``config_dict``.
+
+        The list returned also includes descriptions for subkeys recursed into, and elements are
+        added to it using the DFS iteration order of ``config_dict``.
+
+        Args:
+            config (:py:class:`fica.Config`): the config object being converted
+            config_dict (``dict[str: object]``): the dictionary of default configurations
+
+        Returns:
+            ``list[str]``: the list of descriptions for each key and subkey in ``config_dict``
         """
         descriptions = []
         for k in config_dict:
@@ -37,6 +51,17 @@ class ConfigExporter(ABC):
 
     def add_descriptions(self, lines: List[str], descriptions: List[str]) -> List[str]:
         """
+        Add descriptions to lines of configurations as comments.
+
+        The strings in lines are all padded to the same length so that the comment characters on
+        each line line up vertically. Descriptions are added after the comment characters.
+
+        Args:
+            lines (``list[str]``): the lines of code that descriptions should be added to
+            descriptions (``list[str]``): the list of descriptions for each line in ``lines``
+
+        Returns:
+            ``list[str]``: a list of each line with its description appended
         """
         pad_to = max(len(l) for l in lines) + 1
         pad_line = lambda l: l + " " * (pad_to - len(l))
@@ -46,12 +71,30 @@ class ConfigExporter(ABC):
     @abstractmethod
     def export(self, config: Config) -> str:
         """
+        Export a :py:class:`fica.Config` object to a block of code with descriptions as comments.
         """
         ...
 
 
+class JsonExporter(ConfigExporter):
+    """
+    A configuration exporter that displays its configurations as JSON.
+    """
+
+    comment_char = "//"
+
+    def export(self, config: Config) -> str:
+        config_dict = config.to_dict()
+        descriptions = self.get_descriptions(config, config_dict)
+        conf_str = json.dumps(config_dict, indent=2)
+        lines = conf_str.split("\n")
+        lines[1:-1] = self.add_descriptions(lines[1:-1], descriptions)
+        return "\n".join(lines)
+
+
 class YamlExporter(ConfigExporter):
     """
+    A configuration exporter that displays its configurations as YAML.
     """
 
     comment_char = "#"
@@ -64,11 +107,28 @@ class YamlExporter(ConfigExporter):
 
 
 EXPORTER_CLASSES = {
+    "json": JsonExporter,
     "yaml": YamlExporter,
 }
+"""a dictionary mapping exporter names to their classes"""
 
 
-def create_exporter(exporter_type, **kwargs):
+def create_exporter(exporter_type: str, **kwargs) -> ConfigExporter:
     """
+    Create an instance of the specified exporter type.
+
+    Args:
+        exporter_type (``str``): the name of the exporter to create; should be a key in
+            :py:obj:`EXPORTER_CLASSES`
+        **kwargs: keyword arguments passed to the :py:class:`ConfigExporter` constructor
+
+    Returns:
+        :py:class:`ConfigExporter`: the instantiated exporter
+
+    Raises:
+        ``ValueError``: if there is no exporter of the specified type
     """
+    if exporter_type not in EXPORTER_CLASSES:
+        raise ValueError(f"There is no exporter of type {exporter_type}")
+
     return EXPORTER_CLASSES[exporter_type](**kwargs)

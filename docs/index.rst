@@ -15,8 +15,11 @@
 ``fica`` is a Python library for managing and documenting the structure of user-specified
 configurations.
 
-.. fica:: fica_demo.conf
+.. fica:: fica_demo.CONFIG
+
+.. fica:: fica_demo.CONFIG
+    :format: json
 
 .. code-block:: rst
 
-    .. fica:: fica_demo.conf
+    .. fica:: fica_demo.CONFIG

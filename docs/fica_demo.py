@@ -1,6 +1,6 @@
 import fica
 
-conf = fica.Config([
+CONFIG = fica.Config([
     fica.Key(
         name="foo",
         description="Value of foo",
