@@ -26,10 +26,10 @@ class ConfigExporter(ABC):
         descriptions = []
         for k in config_dict:
             key = config.get_key(k)
-            descriptions.append(key.get_description() if key.get_description() is not None else "")
+            descriptions.append(key.get_description())
 
-            if isinstance(config_dict[k], dict):
-                subkey_config = key.to_pair().value
+            subkey_config = key.get_subkeys_as_config()
+            if subkey_config is not None:
                 subkey_descriptions = self.get_descriptions(subkey_config, config_dict[k])
                 descriptions.extend(subkey_descriptions)
 
@@ -40,7 +40,7 @@ class ConfigExporter(ABC):
         """
         pad_to = max(len(l) for l in lines) + 1
         pad_line = lambda l: l + " " * (pad_to - len(l))
-        concat_line = lambda l, d: pad_line(l) + " " + self.comment_char + " " + d
+        concat_line = lambda l, d: l if d is None else pad_line(l) + " " + self.comment_char + " " + d
         return [concat_line(l, d) for l, d in zip(lines, descriptions)]
 
     @abstractmethod
@@ -59,13 +59,16 @@ class YamlExporter(ConfigExporter):
     def export(self, config: Config) -> str:
         config_dict = config.to_dict()
         descriptions = self.get_descriptions(config, config_dict)
-        conf_str = yaml.dump(config_dict)
+        conf_str = yaml.dump(config_dict, indent=2, sort_keys=False)
         return "\n".join(self.add_descriptions(conf_str.split("\n"), descriptions))
+
+
+EXPORTER_CLASSES = {
+    "yaml": YamlExporter,
+}
 
 
 def create_exporter(exporter_type, **kwargs):
     """
     """
-    return {
-        "yaml": YamlExporter,
-    }[exporter_type](**kwargs)
+    return EXPORTER_CLASSES[exporter_type](**kwargs)

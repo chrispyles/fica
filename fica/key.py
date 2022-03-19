@@ -146,6 +146,11 @@ class Key:
         """
         return self.description
 
+    def get_subkeys_as_config(self) -> Optional[Config]:
+        """
+        """
+        return Config(self.subkeys) if self.default is SUBKEYS else None
+
     def to_pair(self, user_value: Any = EMPTY) -> Optional[KeyValuePair]:
         """
         Convert this key to a :py:class:`KeyValuePair` with the provided user-specified value.
