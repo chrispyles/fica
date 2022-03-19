@@ -1,7 +1,7 @@
 """Module for configuration objects"""
 
 from collections.abc import Iterable
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 class Config:
@@ -50,6 +50,11 @@ class Config:
             ``dict[str, Key]``: the dictionary
         """
         return {k.name: k for k in self.keys}
+
+    def get_key(self, key: str) -> "Key":
+        """
+        """
+        return self._get_keys_dict()[key]
 
     def to_dict(self, user_config: Dict[str, Any] = {}) -> Dict[str, Any]:
         """

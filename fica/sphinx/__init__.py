@@ -4,6 +4,7 @@ from docutils import nodes
 from sphinx.locale import _
 from sphinx.util.docutils import SphinxDirective
 
+from ..exporter import create_exporter
 from ..version import __version__
 
 
@@ -12,7 +13,8 @@ def import_and_get_config(object_path: str) -> str:
     """
     mod, cls = object_path.rsplit(".", 1)
     module = importlib.import_module(mod)
-    return str(getattr(module, cls))
+    config_object = getattr(module, cls)
+    return create_exporter("yaml").export(config_object)
 
 
 class config(nodes.Structural, nodes.Element):
@@ -38,7 +40,7 @@ class FicaDirective(SphinxDirective):
         section_node += nodes.title(_('Config'), _('Config'))
 
         content = import_and_get_config("\n".join(self.content))
-        section_node += nodes.paragraph(_(content), _(content))
+        section_node += nodes.literal_block(_(content), _(content))
 
         config_node = config()
         config_node += section_node

@@ -137,6 +137,15 @@ class Key:
         """
         return self.name
 
+    def get_description(self) -> Optional[str]:
+        """
+        Get the description of the key.
+
+        Returns:
+            ``str | None``: the description of the key
+        """
+        return self.description
+
     def to_pair(self, user_value: Any = EMPTY) -> Optional[KeyValuePair]:
         """
         Convert this key to a :py:class:`KeyValuePair` with the provided user-specified value.
@@ -167,4 +176,4 @@ class Key:
                 conf.update(value)
                 value = conf
 
-        return KeyValuePair(self.key, value)
+        return KeyValuePair(self.name, value)
