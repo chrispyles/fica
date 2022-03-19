@@ -4,8 +4,8 @@ from docutils import nodes
 from sphinx.locale import _
 from sphinx.util.docutils import SphinxDirective
 
-from ..exporter import create_exporter
-from ..version import __version__
+from .exporter import create_exporter
+from .version import __version__
 
 
 def import_and_get_config(object_path: str) -> str:
