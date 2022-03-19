@@ -13,13 +13,14 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'fica'
-copyright = '2022, Chris Pyles'
-author = 'Chris Pyles'
+project = 'fica Documentation'
+copyright = '2022, Christopher Pyles'
+author = 'Christopher Pyles'
 
 
 # -- General configuration ---------------------------------------------------
@@ -30,6 +31,7 @@ author = 'Chris Pyles'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'fica.sphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

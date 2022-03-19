@@ -3,7 +3,7 @@
     You can adapt this file completely to your liking, but it should at least
     contain the root `toctree` directive.
 
-fica Documentation
+``fica`` Documentation
 =====================================
 
 .. toctree::
@@ -14,3 +14,9 @@ fica Documentation
 
 ``fica`` is a Python library for managing and documenting the structure of user-specified
 configurations.
+
+.. fica:: fica_demo.conf
+
+.. code-block:: rst
+
+    .. fica:: fica_demo.conf
