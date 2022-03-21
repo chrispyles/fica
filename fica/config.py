@@ -1,7 +1,7 @@
 """Module for configuration objects"""
 
 from collections.abc import Iterable
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 
 class Config:

@@ -98,6 +98,8 @@ class YamlExporter(ConfigExporter):
     """
 
     comment_char = "#"
+
+    # TODO: handle default EMPTY with no subkeys
     
     def export(self, config: Config) -> str:
         config_dict = config.to_dict()

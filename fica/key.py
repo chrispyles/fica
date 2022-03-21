@@ -126,7 +126,14 @@ class Key:
         Returns:
             :py:class:`Key`: the key object
         """
-        return cls(**dct)
+        subkeys = dct.pop("subkeys", None)
+        if subkeys:
+            if not isinstance(subkeys, list):
+                raise TypeError("'subkeys' provided to Key.from_dict is not a list")
+
+            subkeys = [Key.from_dict(s) if not isinstance(s, Key) else s for s in subkeys]
+
+        return cls(**dct, subkeys=subkeys)
 
     def get_name(self) -> str:
         """
@@ -177,7 +184,7 @@ class Key:
 
             # handle user-inputted dict w/ missing subkeys
             if self.subkeys is not None and isinstance(value, dict):
-                conf = Config(self.subkeys).to_dict()
+                conf = Config(self.subkeys).to_dict(value)
                 conf.update(value)
                 value = conf
 
