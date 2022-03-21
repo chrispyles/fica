@@ -158,12 +158,14 @@ class Key:
         """
         return Config(self.subkeys) if self.default is SUBKEYS else None
 
-    def to_pair(self, user_value: Any = EMPTY) -> Optional[KeyValuePair]:
+    def to_pair(self, user_value: Any = EMPTY, include_empty=False) -> Optional[KeyValuePair]:
         """
         Convert this key to a :py:class:`KeyValuePair` with the provided user-specified value.
 
         Args:
             user_value (``object``): the value specified by the user
+            include_empty (``bool``): whether to return a pair with the value ``None`` if no user
+                value is provided and the default is :py:obj:`fica.EMPTY`
 
         Returns:
             :py:class:`KeyValuePair`: the key-value pair if the key should be present,
@@ -174,6 +176,8 @@ class Key:
             if self.default is SUBKEYS:
                 value = Config(self.subkeys).to_dict()
             elif self.default is EMPTY:
+                if include_empty:
+                    return KeyValuePair(self.name, None)
                 return None
             else:
                 value = self.default

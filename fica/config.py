@@ -63,12 +63,14 @@ class Config:
         """
         return self._get_keys_dict()[key]
 
-    def to_dict(self, user_config: Dict[str, Any] = {}) -> Dict[str, Any]:
+    def to_dict(self, user_config: Dict[str, Any] = {}, include_empty=False) -> Dict[str, Any]:
         """
         Generate a dictionary with all keys present, adding values from the provided user input.
 
         Args:
             user_config (``dict[str, object]``): the user-inputted configurations
+            include_empty (``bool``): whether configurations that aren't overridden whose defaults
+                are :py:obj:`fica.EMPTY` should be included in the resulting dictionary
 
         Returns:
             ``dict[str, object]``: the dictionary of configurations
@@ -79,13 +81,13 @@ class Config:
             if k not in keys_dict:
                 config[k] = v
             else:
-                pair = keys_dict[k].to_pair(v)
+                pair = keys_dict[k].to_pair(v, include_empty=include_empty)
                 if pair is not None:
                     config[pair.key] = pair.value
 
         for k, v in keys_dict.items():
             if k not in config:
-                pair = v.to_pair()
+                pair = v.to_pair(include_empty=include_empty)
                 if pair is not None:
                     config[pair.key] = pair.value
 

@@ -74,8 +74,25 @@ to the special value :py:obj:`fica.SUBKEYS`, another singleton object provided b
 represents that a key's default value should be a dictionary mapping its subkeys to their default
 values.
 
+Lastly, keys can also type-check the values users provide using the ``type`` argument, which accepts
+a single type or a tuple of types (like ``isinstance``).
+
+.. code-block:: python
+
+    fica.Key("foo", type=(int, float))
+
+If ``type`` is provided and the user inputs a value that is not of the specified type(s), the key
+will raise a ``TypeError``.
+
+For simplicity, if a key is of a specific type or nullable, you can set ``allow_none`` to ``True``
+instead of providing ``NoneType`` as one of the allowed types.
+
+.. code-block:: python
+
+    fica.Key("foo", type=(int, float), allow_none=True)
+
 In order to facilitate easily loading configuration structures from external files, keys also
-have a :py:meth:`fica.Key.from_dict` method that turns a Python dictionary into a
+have a :py:meth:`from_dict<fica.Key.from_dict>` method that turns a Python dictionary into a
 :py:class:`fica.Key` instance provided a dictionary mapping constructor argument names to their
 values:
 
@@ -98,7 +115,39 @@ values:
 Configurations
 --------------
 
-Configurations are represented by the :py:class:`fica.Config` class.
+Configurations are represented by the :py:class:`fica.Config` class, which can be instantiated by
+passing a list of :py:class:`fica.Key` instances to its constructor, or from a list of dictionaries
+via the :py:meth:`fica.Config.from_list` method.
+
+.. code-block:: python
+
+    fica.Config([
+        fica.Key("foo"),
+        fica.Key("bar"),
+    ])
+
+The :py:class:`fica.Config` class is how ``fica`` converts configurations provided by the user into
+a dictionary containing all keys with their default values. To do this, use the
+:py:meth:`fica.Config.to_dict` method, which takes as its only argument a dictionary containing the
+values by the user.
+
+.. code-block:: python
+
+    config = fica.Config([...])
+    config.to_dict(user_config)
+
+The dictionary returned by :py:meth:`fica.Config.to_dict` contains every key-value pair in the
+dictionary passed to it (unless a value for a key in the configuration is not of the correct type,
+in which case a ``TypeError`` is raised). It also contains every other key in the configuration 
+not contained in the provided dictionary mapped to its default value unless its default is
+:py:obj:`fica.EMPTY`, in which case the key is *not* included in the returned dictionary.
+
+You can force ``fica`` to include keys mapped to :py:obj:`fica.EMPTY` by setting ``include_empty``
+to ``True``:
+
+.. code-block:: python
+
+    config.to_dict(user_config, include_empty=True)
 
 
 .. _documenting:
@@ -106,15 +155,42 @@ Configurations are represented by the :py:class:`fica.Config` class.
 Documenting configurations
 ==========================
 
-``fica`` also provides a Sphinx extension that can be used to create code blocks for documenting
-configurations, their default values, and their descriptions.
+``fica`` provides a Sphinx extension that can be used to create code blocks for documenting
+configurations, their default values, and their descriptions. The main piece of this extension is
+the ``fica`` directive, which uses Sphinx's code blocks to display the configurations. To use the
+directive, pass the importable name of a :py:class:`fica.Config` object as the only argument to
+the directive.
 
+For example, say that we have the following in a file called ``fica_demo.py``:
 
-.. fica:: fica_demo.CONFIG
+.. literalinclude:: fica_demo.py
+    :language: python
 
-.. fica:: fica_demo.CONFIG
-    :format: json
+To document the object ``fica_demo.CONFIG``, you would use the following in your RST file:
 
 .. code-block:: rst
 
     .. fica:: fica_demo.CONFIG
+
+This would produce the following:
+
+.. fica:: fica_demo.CONFIG
+
+Note that even though the default for ``quuz`` is :py:obj:`fica.EMPTY` (and would therefore not be
+included in the dictionary returned by :py:meth:`fica.Config.to_dict` unless specified by the user),
+the documentation produced by ``fica`` still includes it mapped to ``None``.
+
+The default format for configurations is YAML, but you can also choose JSON by setting the
+``format`` option to ``json``:
+
+.. code-block:: rst
+
+    .. fica:: fica_demo.CONFIG
+       :format: json
+
+This produces:
+
+.. fica:: fica_demo.CONFIG
+    :format: json
+
+

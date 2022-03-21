@@ -66,7 +66,29 @@ class ConfigExporter(ABC):
         pad_to = max(len(l) for l in lines) + 1
         pad_line = lambda l: l + " " * (pad_to - len(l))
         concat_line = lambda l, d: l if d is None else pad_line(l) + " " + self.comment_char + " " + d
-        return [concat_line(l, d) for l, d in zip(lines, descriptions)]
+
+        ret, iter_d = [], iter(descriptions)
+        for l in lines:
+            if self.should_add_description(l):
+                d = next(iter_d)
+                l = concat_line(l, d)
+
+            ret.append(l)
+
+        return ret
+
+    def should_add_description(self, line: str) -> bool:
+        """
+        Determine whether the provided line represents a key and should have a description appended
+        to it.
+
+        Args:
+            line (``str``): the line to check
+
+        Returns:
+            ``bool``: whether a description should be appended to the line
+        """
+        return True
 
     @abstractmethod
     def export(self, config: Config) -> str:
@@ -83,8 +105,11 @@ class JsonExporter(ConfigExporter):
 
     comment_char = "//"
 
+    def should_add_description(self, line: str) -> bool:
+        return ":" in line
+
     def export(self, config: Config) -> str:
-        config_dict = config.to_dict()
+        config_dict = config.to_dict(include_empty=True)
         descriptions = self.get_descriptions(config, config_dict)
         conf_str = json.dumps(config_dict, indent=2)
         lines = conf_str.split("\n")
@@ -98,13 +123,11 @@ class YamlExporter(ConfigExporter):
     """
 
     comment_char = "#"
-
-    # TODO: handle default EMPTY with no subkeys
     
     def export(self, config: Config) -> str:
-        config_dict = config.to_dict()
+        config_dict = config.to_dict(include_empty=True)
         descriptions = self.get_descriptions(config, config_dict)
-        conf_str = yaml.dump(config_dict, indent=2, sort_keys=False)
+        conf_str = yaml.dump(config_dict, indent=2, sort_keys=False).strip()
         return "\n".join(self.add_descriptions(conf_str.split("\n"), descriptions))
 
 
