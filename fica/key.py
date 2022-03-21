@@ -102,6 +102,9 @@ class Key:
                     not (isinstance(default, type) or (allow_none and default is None)):
                 raise TypeError("The default value is not of the specified type(s)")
 
+        if isinstance(default, dict):
+            raise TypeError("The default value cannot be a dictionary; use subkeys instead")
+
         if default is EMPTY and subkeys is not None:
             default = SUBKEYS
 
