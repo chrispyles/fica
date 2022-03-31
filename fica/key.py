@@ -90,16 +90,16 @@ class Key:
         description: Optional[str] = None,
         default: Any = EMPTY,
         subkeys: Optional[List["Key"]] = None,
-        type: Optional[Union[Type, Tuple[Type]]] = None,
+        type_: Optional[Union[Type, Tuple[Type]]] = None,
         allow_none: bool = False
     ) -> None:
-        if type is not None:
-            if not isinstance(type, Type) or (isinstance(type, tuple) and \
-                    all(isinstance(e, Type) for e in type)):
-                raise TypeError("type must be a single type or tuple of types")
+        if type_ is not None:
+            if not (isinstance(type_, Type) or (isinstance(type_, tuple) and \
+                    all(isinstance(e, Type) for e in type_))):
+                raise TypeError("type_ must be a single type or tuple of types")
 
             if default is not EMPTY and default is not SUBKEYS and \
-                    not (isinstance(default, type) or (allow_none and default is None)):
+                    not (isinstance(default, type_) or (allow_none and default is None)):
                 raise TypeError("The default value is not of the specified type(s)")
 
         if isinstance(default, dict):
@@ -115,7 +115,7 @@ class Key:
         self.description = description
         self.default = default
         self.subkeys = subkeys
-        self.type_ = type
+        self.type_ = type_
         self.allow_none = allow_none
 
     @classmethod

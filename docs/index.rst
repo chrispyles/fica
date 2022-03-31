@@ -74,14 +74,14 @@ to the special value :py:obj:`fica.SUBKEYS`, another singleton object provided b
 represents that a key's default value should be a dictionary mapping its subkeys to their default
 values.
 
-Lastly, keys can also type-check the values users provide using the ``type`` argument, which accepts
-a single type or a tuple of types (like ``isinstance``).
+Lastly, keys can also type-check the values users provide using the ``type_`` argument, which
+accepts a single type or a tuple of types (like ``isinstance``).
 
 .. code-block:: python
 
-    fica.Key("foo", type=(int, float))
+    fica.Key("foo", type_=(int, float))
 
-If ``type`` is provided and the user inputs a value that is not of the specified type(s), the key
+If ``type_`` is provided and the user inputs a value that is not of the specified type(s), the key
 will raise a ``TypeError``.
 
 For simplicity, if a key is of a specific type or nullable, you can set ``allow_none`` to ``True``
@@ -89,7 +89,7 @@ instead of providing ``NoneType`` as one of the allowed types.
 
 .. code-block:: python
 
-    fica.Key("foo", type=(int, float), allow_none=True)
+    fica.Key("foo", type_=(int, float), allow_none=True)
 
 In order to facilitate easily loading configuration structures from external files, keys also
 have a :py:meth:`from_dict<fica.Key.from_dict>` method that turns a Python dictionary into a
