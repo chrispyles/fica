@@ -23,6 +23,7 @@ release:
 	echo '__version__ = "$(VERSION)"' > fica/version.py
 	git add fica/version.py
 	git commit -m "update version info for v$(VERSION)"
+	git push origin stable
 	python3 setup.py sdist bdist_wheel
 	hub release create -a dist/*.tar.gz -a dist/*.whl -m 'v$(VERSION)' $(VERSION)
 	python3 -m twine upload dist/*
