@@ -129,6 +129,7 @@ class Key:
         Returns:
             :py:class:`Key`: the key object
         """
+        dct = {**dct}
         subkeys = dct.pop("subkeys", None)
         if subkeys:
             if not isinstance(subkeys, list):
@@ -185,9 +186,10 @@ class Key:
             else:
                 value = self.default
         else:
-            if not (isinstance(value, self.type_) or (self.allow_none and value is None)):
+            if not ((self.type_ is None or isinstance(value, self.type_)) or \
+                    (self.allow_none and value is None)):
                 raise TypeError(
-                    f"User-specified value for key '{self.key}' is not of the correct type")
+                    f"User-specified value for key '{self.name}' is not of the correct type")
 
             # handle user-inputted dict w/ missing subkeys
             if self.subkeys is not None and isinstance(value, dict):
