@@ -1,4 +1,4 @@
-"""Module for configuration objects"""
+"""Configuration objects"""
 
 from collections.abc import Iterable
 from typing import Any, Dict, List, Union

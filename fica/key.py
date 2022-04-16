@@ -1,4 +1,4 @@
-"""Module for configuration keys"""
+"""Configuration keys"""
 
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
