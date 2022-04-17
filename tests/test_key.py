@@ -78,6 +78,9 @@ class TestKey:
             Key(name, type_=int, default=1.3)
 
         with pytest.raises(TypeError):
+            Key(name, type_=int, default=None)
+
+        with pytest.raises(TypeError):
             Key(name, default={"bar": 1})
 
         with pytest.raises(ValueError):

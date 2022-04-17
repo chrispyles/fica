@@ -118,6 +118,16 @@ class Key:
         self.type_ = type_
         self.allow_none = allow_none
 
+    def __eq__(self, other: Any) -> bool:
+        """
+        Determine whether another object is equal to this key. An object is equal to a key iff it
+        is also a key and has the same attributes.
+        """
+        return isinstance(other, type(self)) and self.name == other.name and \
+            self.description == other.description and self.default == other.default and \
+            self.subkeys == other.subkeys and self.type_ == other.type_ and \
+            self.allow_none == other.allow_none
+
     @classmethod
     def from_dict(cls, dct: Dict[str, Any]) -> "Key":
         """

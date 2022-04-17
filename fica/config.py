@@ -28,6 +28,13 @@ class Config:
 
         self.keys = keys
 
+    def __eq__(self, other: Any) -> bool:
+        """
+        Determine whether another object is equal to this config. An object is equal to a config iff
+        it is also a config and has the same keys.
+        """
+        return isinstance(other, type(self)) and self.keys == other.keys
+
     @classmethod
     def from_list(cls, lst: List[Union["Key", Dict[str, Any]]]) -> "Config":
         """
