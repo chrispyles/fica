@@ -21,7 +21,7 @@ class ConfigExporter(ABC):
         """
         the character(s) used to delimit comments in the language represented by this exporter
         """
-        ...
+        raise NotImplementedError()
 
     def get_descriptions(self, config: Config, config_dict: Dict[str, Any]) -> List[str]:
         """
@@ -95,7 +95,7 @@ class ConfigExporter(ABC):
         """
         Export a :py:class:`fica.Config` object to a block of code with descriptions as comments.
         """
-        ...
+        raise NotImplementedError()
 
 
 class JsonExporter(ConfigExporter):

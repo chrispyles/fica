@@ -14,7 +14,7 @@
 
 PYTEST        = pytest
 TESTPATH      = tests
-PYTESTOPTS    = -v
+PYTESTOPTS    = -vv
 COVERAGE      = coverage
 DATE         := $(shell date "+%F")
 
