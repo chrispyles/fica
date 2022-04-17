@@ -50,7 +50,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         python3 setup.py sdist bdist_wheel
-        # hub release create -a dist/*.tar.gz -a dist/*.whl -m 'v${{ github.event.inputs.version }}' 'v${{ github.event.inputs.version }}'
+        hub release create -a dist/*.tar.gz -a dist/*.whl -m 'v${{ github.event.inputs.version }}' 'v${{ github.event.inputs.version }}'
         python3 -m twine upload dist/*
 
     - name: PR stable back into main
