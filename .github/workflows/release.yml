@@ -40,7 +40,7 @@ jobs:
       run: |
         echo '__version__ = "${{ github.event.inputs.version }}"' > fica/version.py
         git add fica/version.py
-        git commit -m "update version info for v$(VERSION)"
+        git commit -m "update version info for v${{ github.event.inputs.version }}"
         git push origin stable
 
     - name: Build and upload release
@@ -50,7 +50,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         python3 setup.py sdist bdist_wheel
-        hub release create -a dist/*.tar.gz -a dist/*.whl -m 'v$(VERSION)' 'v$(VERSION)'
+        # hub release create -a dist/*.tar.gz -a dist/*.whl -m 'v${{ github.event.inputs.version }}' 'v${{ github.event.inputs.version }}'
         python3 -m twine upload dist/*
 
     - name: PR stable back into main
