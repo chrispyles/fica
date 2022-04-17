@@ -6,8 +6,8 @@
 # To run tests, use `make test` with the `TESTPATH` and/or `PYTESTOPTS` arguments:
 #   $ make test
 #
-# The `testcov` target can be used to build a local copy of the code coverage in HTML:
-#   $ make testcov
+# The `htmlcov` target can be used to build a local copy of the code coverage in HTML:
+#   $ make htmlcov
 #
 # To build the docs, use `make docs`:
 #   $ make docs
