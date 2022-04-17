@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 # get version
 env = {}
-with open("fica/__init__.py") as f:
+with open("fica/version.py") as f:
     exec(f.read(), env)
 version = env["__version__"]
 
