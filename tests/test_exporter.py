@@ -4,15 +4,7 @@ import pytest
 
 from textwrap import dedent
 
-from fica import Config
 from fica.exporter import create_exporter, JsonExporter, YamlExporter
-
-from .test_config import sample_keys
-
-
-@pytest.fixture
-def sample_config(sample_keys):
-    return Config(sample_keys)
 
 
 class TestJsonExporter:
@@ -22,6 +14,7 @@ class TestJsonExporter:
 
     def test_export(self, sample_config):
         """
+        Test for the ``export`` method.
         """
         exported_config = JsonExporter().export(sample_config)
         assert exported_config == dedent("""\
@@ -44,6 +37,7 @@ class TestYamlExporter:
 
     def test_export(self, sample_config):
         """
+        Test for the ``export`` method.
         """
         exported_config = YamlExporter().export(sample_config)
         assert exported_config == dedent("""\
