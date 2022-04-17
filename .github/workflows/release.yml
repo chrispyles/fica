@@ -1,0 +1,61 @@
+name: Publish release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version number'
+        required: true
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python3 -m pip install -r requirements.txt twine wheel setuptools
+
+    - name: Checkout to stable
+      uses: actions/checkout@v2
+      with:
+        ref: stable
+
+    - name: Merge main -> stable
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git merge origin/main -Xtheirs --allow-unrelated-histories
+
+    - name: Update version
+      run: |
+        echo '__version__ = "${{ github.event.inputs.version }}"' > fica/version.py
+        git add fica/version.py
+        git commit -m "update version info for v$(VERSION)"
+        git push origin stable
+
+    - name: Build and upload release
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        python3 setup.py sdist bdist_wheel
+        hub release create -a dist/*.tar.gz -a dist/*.whl -m 'v$(VERSION)' 'v$(VERSION)'
+        python3 -m twine upload dist/*
+
+    - name: PR stable back into main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        hub pull-request -b chrispyles:main -h chrispyles:stable -l "release" \
+          -m "Release v${{ github.event.inputs.version }}"$'\n'$'\n'"Updates from the release of version ${{ github.event.inputs.version }}"
