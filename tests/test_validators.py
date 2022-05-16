@@ -2,7 +2,7 @@
 
 import pytest
 
-from fica.validators import choice, function
+from fica.validators import choice, validator
 
 
 def test_choice():
@@ -31,20 +31,19 @@ def test_choice():
         choice(1)
 
 
-def test_function():
+def test_validator():
     """
-    Tests the ``function`` validator.
+    Tests the ``validator`` decorator for validation functions.
     """
     fn = lambda x: x % 2 == 0
     message = "bad value"
 
+    @validator
     def validator_fn(x):
         return None if fn(x) else message
 
-    validator = function(validator_fn)
-
     for i in range(10):
-        ret = validator.validate(i)
+        ret = validator_fn.validate(i)
         if fn(i):
             assert ret is None
         else:
@@ -52,5 +51,5 @@ def test_function():
 
     # test errors
     with pytest.raises(TypeError):
-        validator = function(lambda x: 1)
-        validator.validate(2)
+        vdtr = validator(lambda x: 1)
+        vdtr.validate(2)

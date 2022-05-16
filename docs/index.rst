@@ -74,23 +74,6 @@ to the special value :py:obj:`fica.SUBKEYS`, another singleton object provided b
 represents that a key's default value should be a dictionary mapping its subkeys to their default
 values.
 
-Lastly, keys can also type-check the values users provide using the ``type_`` argument, which
-accepts a single type or a tuple of types (like ``isinstance``).
-
-.. code-block:: python
-
-    fica.Key("foo", type_=(int, float))
-
-If ``type_`` is provided and the user inputs a value that is not of the specified type(s), the key
-will raise a ``TypeError``.
-
-For simplicity, if a key is of a specific type or nullable, you can set ``allow_none`` to ``True``
-instead of providing ``NoneType`` as one of the allowed types.
-
-.. code-block:: python
-
-    fica.Key("foo", type_=(int, float), allow_none=True)
-
 In order to facilitate easily loading configuration structures from external files, keys also
 have a :py:meth:`from_dict<fica.Key.from_dict>` method that turns a Python dictionary into a
 :py:class:`fica.Key` instance provided a dictionary mapping constructor argument names to their
@@ -108,6 +91,62 @@ values:
             },
         ],
     })
+
+
+Validating values
++++++++++++++++++
+
+Keys can also type-check the values users provide using the ``type_`` argument, which
+accepts a single type or a tuple of types (like ``isinstance``).
+
+.. code-block:: python
+
+    fica.Key("foo", type_=(int, float))
+
+If ``type_`` is provided and the user inputs a value that is not of the specified type(s), the key
+will raise a ``TypeError``.
+
+For simplicity, if a key is of a specific type or nullable, you can set ``allow_none`` to ``True``
+instead of providing ``NoneType`` as one of the allowed types.
+
+.. code-block:: python
+
+    fica.Key("foo", type_=(int, float), allow_none=True)
+
+For more complex validations, ``fica`` provides some validators that can be used to check values
+specified by the user. These validators are in the :py:mod:`fica.validators` module, and instances
+of these classes can be passed to the ``validator`` argument of the :py:class:`fica.Key`
+constructor. When a user specifies a value that is invalid according to this validator, a
+``ValueError`` is raised with a message for the user.
+
+For example, to assert that a value is one of a specific set of possible values, you can use the
+:py:class:`fica.validators.choice` validator. This validator takes as its only argument a list of
+possible values:
+
+.. code-block:: python
+
+    fica.Key("foo", validator=fica.validators.choice([1, 2, 3]))
+
+You can also specify a custom validation function that has been decorated with the
+:py:class:`fica.validators.validator` decorator. Validator functions should accept a single argument
+and return ``None`` if the value is valid and a string with an error message for the user if it is
+invalid. If a validator function does not return a value of type ``str | None``, a ``TypeError`` is
+raised.
+
+.. code-block:: python
+
+    @fica.validators.validator
+    def is_even_validator(value):
+        if value % 2 != 0:
+            return f"{value} is not even"
+
+    fica.Key("foo", validator=is_even_validator)
+
+``fica`` checks the type of a value before calling any validators, so if you're using a validator in
+conjunction with a validator, you can rely on the value passed to your validation function being of
+the correct type.
+
+A full list of available validators can be found in the :ref:`API reference<api_ref_validators>`.
 
 
 .. _configs:
@@ -129,7 +168,7 @@ via the :py:meth:`fica.Config.from_list` method.
 The :py:class:`fica.Config` class is how ``fica`` converts configurations provided by the user into
 a dictionary containing all keys with their default values. To do this, use the
 :py:meth:`fica.Config.to_dict` method, which takes as its only argument a dictionary containing the
-values by the user.
+values specified by the user.
 
 .. code-block:: python
 

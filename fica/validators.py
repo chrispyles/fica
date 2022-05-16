@@ -54,12 +54,11 @@ class choice(_Validator):
             return f"{value} is not one of {choices}"
 
 
-class function(_Validator):
+class validator(_Validator):
     """
-    A validator that applies the supplied validation function to the value, returning its return
-    value.
+    A decorator for custom validation functions.
 
-    The function passed to this validator should return ``None`` if the value passed to it is valid,
+    The decorated function should return ``None`` if the value passed to it is valid,
     otherwise it should return a string with an error message that will be displayed to the user. If
     the return type of the function is not ``str | None``, a ``TypeError`` is raised.
 

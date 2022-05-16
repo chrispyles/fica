@@ -176,9 +176,13 @@ class Key:
         """
         return self.description
 
-    # TODO: docstring
     def get_subkeys_as_config(self) -> Optional[Config]:
         """
+        Convert the subkeys of this key to a :py:class:`fica.Config` object.
+
+        Returns:
+            :py:class:`fica.Config` or ``None``: the config if the default value is
+            :py:obj:`fica.SUBKEYS` otherwise ``None``
         """
         return Config(self.subkeys) if self.default is SUBKEYS else None
 
