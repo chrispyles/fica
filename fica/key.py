@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from .config import Config
+from .validators import _Validator
 
 
 class _Empty:
@@ -84,6 +85,9 @@ class Key:
     allow_none: bool
     """whether ``None`` is a valid value for the configuration"""
 
+    validator: Optional[_Validator]
+    """a validator for user-specified values"""
+
     def __init__(
         self,
         name: str,
@@ -91,7 +95,8 @@ class Key:
         default: Any = EMPTY,
         subkeys: Optional[List["Key"]] = None,
         type_: Optional[Union[Type, Tuple[Type]]] = None,
-        allow_none: bool = False
+        allow_none: bool = False,
+        validator: Optional[_Validator] = None,
     ) -> None:
         if type_ is not None:
             if not (isinstance(type_, Type) or (isinstance(type_, tuple) and \
@@ -105,6 +110,9 @@ class Key:
         if isinstance(default, dict):
             raise TypeError("The default value cannot be a dictionary; use subkeys instead")
 
+        if validator is not None and not isinstance(validator, _Validator):
+            raise TypeError("validator is not a valid validator")
+
         if default is EMPTY and subkeys is not None:
             default = SUBKEYS
 
@@ -117,6 +125,7 @@ class Key:
         self.subkeys = subkeys
         self.type_ = type_
         self.allow_none = allow_none
+        self.validator = validator
 
     def __eq__(self, other: Any) -> bool:
         """
@@ -169,6 +178,11 @@ class Key:
 
     def get_subkeys_as_config(self) -> Optional[Config]:
         """
+        Convert the subkeys of this key to a :py:class:`fica.Config` object.
+
+        Returns:
+            :py:class:`fica.Config` or ``None``: the config if the default value is
+            :py:obj:`fica.SUBKEYS` otherwise ``None``
         """
         return Config(self.subkeys) if self.default is SUBKEYS else None
 
@@ -184,6 +198,10 @@ class Key:
         Returns:
             :py:class:`KeyValuePair`: the key-value pair if the key should be present,
             otherwise ``None``
+
+        Raises:
+            ``TypeError``: if the user-specified value is not of the correct type
+            ``ValueError``: if the user-specified value fails validation
         """
         value = user_value
         if value is EMPTY:
@@ -200,6 +218,12 @@ class Key:
                     (self.allow_none and value is None)):
                 raise TypeError(
                     f"User-specified value for key '{self.name}' is not of the correct type")
+
+            # validate the value
+            if self.validator is not None:
+                err = self.validator.validate(value)
+                if err is not None:
+                    raise ValueError(f"User-specified value failed validation: {err}")
 
             # handle user-inputted dict w/ missing subkeys
             if self.subkeys is not None and isinstance(value, dict):

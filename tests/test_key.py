@@ -4,8 +4,9 @@ import pytest
 
 from unittest import mock
 
-from fica import EMPTY, Key, SUBKEYS
+from fica import EMPTY, Key, SUBKEYS, validators
 from fica.key import KeyValuePair
+from fica.validators import _Validator
 
 from .utils import assert_object_attrs
 
@@ -21,6 +22,7 @@ def default_key_attrs():
         "subkeys": None,
         "type_": None,
         "allow_none": False,
+        "validator": None,
     }
 
 
@@ -70,6 +72,10 @@ class TestKey:
         key = Key(name, subkeys=subkeys)
         assert_object_attrs(key, {**default_key_attrs, "name": name, "subkeys": subkeys, "default": SUBKEYS})
 
+        validator = validators.choice([1, 2, 3])
+        key = Key(name, validator=validator)
+        assert_object_attrs(key, {**default_key_attrs, "name": name, "validator": validator})
+
         # test errors
         with pytest.raises(TypeError):
             Key(name, type_=[int])
@@ -85,6 +91,9 @@ class TestKey:
 
         with pytest.raises(ValueError):
             Key(name, default=SUBKEYS)
+
+        with pytest.raises(TypeError):
+            Key(name, validator=lambda x: x % 2 == 0)
 
     def test_from_dict(self, default_key_attrs):
         """
@@ -143,7 +152,7 @@ class TestKey:
         mocked_config.assert_not_called()
 
         key = Key("foo", subkeys=[Key("bar")])
-        subkeys = key.get_subkeys_as_config()
+        key.get_subkeys_as_config()
         mocked_config.assert_called_with(key.subkeys)
 
     def test_to_pair(self):
@@ -208,6 +217,20 @@ class TestKey:
         assert isinstance(pair, KeyValuePair)
         assert pair.key == name
         assert pair.value == {"bar": 2, "baz": 3}
+
+        mocked_validator = mock.Mock(spec=_Validator)
+        validator_key = Key(name, validator=mocked_validator)
+        validator_key.to_pair()
+        mocked_validator.validate.assert_not_called()
+
+        mocked_validator.validate.return_value = None
+        validator_key.to_pair(1)
+        mocked_validator.validate.assert_called_with(1)
+
+        mocked_validator.validate.return_value = "bad value"
+        with pytest.raises(ValueError, match=fr".*{mocked_validator.validate.return_value}.*"):
+            validator_key.to_pair(1)
+            mocked_validator.validate.assert_called_with(1)
 
         # test errors
         with pytest.raises(TypeError):
