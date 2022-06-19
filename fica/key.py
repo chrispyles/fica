@@ -115,16 +115,6 @@ class Key:
         self.validator = validator
         self.subkey_container = subkey_container
 
-    # def __eq__(self, other: Any) -> bool:
-    #     """
-    #     Determine whether another object is equal to this key. An object is equal to a key iff it
-    #     is also a key and has the same attributes.
-    #     """
-    #     return isinstance(other, type(self)) and \
-    #         self.description == other.description and self.default == other.default and \
-    #         self.type_ == other.type_ and \
-    #         self.allow_none == other.allow_none
-
     def get_description(self) -> Optional[str]:
         """
         Get the description of the key.
@@ -170,8 +160,7 @@ class Key:
         else:
             if not ((self.type_ is None or isinstance(value, self.type_)) or \
                     (self.allow_none and value is None)):
-                raise TypeError(
-                    f"User-specified value for key '{self.name}' is not of the correct type")
+                raise TypeError("User-specified value is not of the correct type")
 
             # validate the value
             if self.validator is not None:

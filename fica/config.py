@@ -29,7 +29,11 @@ class Config:
         seen_keys = set()
         for k, v in user_config.items():
             if k in all_keys:
-                value = getattr(cls, k).get_value(v)
+                try:
+                    value = getattr(cls, k).get_value(v)
+                except Exception as e:
+                    raise RuntimeError(f"An error occurred while processing key '{k}': {e}")
+
                 setattr(self, k, value)
                 seen_keys.add(k)
 
@@ -52,16 +56,15 @@ class Config:
                 keys.add(attr)
         return keys
 
-    # def __eq__(self, other: Any) -> bool:
-    #     """
-    #     Determine whether another object is equal to this config. An object is equal to a config iff
-    #     it is also a config and has the same keys.
-    #     """
-    #     if not isinstance(other, type(self)):
-    #         return False
+    def __eq__(self, other: Any) -> bool:
+        """
+        Determine whether another object is equal to this config. An object is equal to a config iff
+        it is also a config of the same type and has the same key values.
+        """
+        if not isinstance(other, type(self)):
+            return False
 
-    #     s_keys, o_keys = self._get_keys_(), other._get_keys_()
-    #     return s_keys == o_keys and all(getattr(type(self), k) == getattr(type(other)))
+        return all(getattr(self, k) == getattr(other, k) for k in self._get_keys_())
 
     def __getitem__(self, key) -> Any:
         """

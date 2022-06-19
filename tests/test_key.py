@@ -4,8 +4,7 @@ import pytest
 
 from unittest import mock
 
-from fica import EMPTY, Key, SUBKEYS, validators
-from fica.key import KeyValuePair
+from fica import Config, EMPTY, Key, SUBKEYS, validators
 from fica.validators import _Validator
 
 from .utils import assert_object_attrs
@@ -19,10 +18,10 @@ def default_key_attrs():
     return {
         "description": None,
         "default": EMPTY,
-        "subkeys": None,
         "type_": None,
         "allow_none": False,
         "validator": None,
+        "subkey_container": None,
     }
 
 
@@ -43,198 +42,141 @@ class TestKey:
         """
         Tests for the ``Key`` constructor and attribute getters.
         """
-        name = "foo"
-        key = Key(name)
-        assert_object_attrs(key, {**default_key_attrs, "name": name})
-        assert key.get_name() == name
+        key = Key()
+        assert_object_attrs(key, {**default_key_attrs})
+        assert key.get_subkey_container() is None
 
         type_ = int
-        key = Key(name, type_=type_)
-        assert_object_attrs(key, {**default_key_attrs, "name": name, "type_": type_})
+        key = Key(type_=type_)
+        assert_object_attrs(key, {**default_key_attrs, "type_": type_})
 
         type_ = int, float
-        key = Key(name, type_=type_)
-        assert_object_attrs(key, {**default_key_attrs, "name": name, "type_": type_})
+        key = Key(type_=type_)
+        assert_object_attrs(key, {**default_key_attrs, "type_": type_})
 
         default = 1
-        key = Key(name, default=default)
-        assert_object_attrs(key, {**default_key_attrs, "name": name, "default": default})
+        key = Key(default=default)
+        assert_object_attrs(key, {**default_key_attrs, "default": default})
 
-        key = Key(name, default=default, allow_none=True)
-        assert_object_attrs(key, {**default_key_attrs, "name": name, "default": default, "allow_none": True})
+        key = Key(default=default, allow_none=True)
+        assert_object_attrs(key, {**default_key_attrs, "default": default, "allow_none": True})
 
         descr = "bar"
-        key = Key(name, description=descr)
-        assert_object_attrs(key, {**default_key_attrs, "name": name, "description": descr})
+        key = Key(description=descr)
+        assert_object_attrs(key, {**default_key_attrs, "description": descr})
         assert key.get_description() == descr
 
-        subkeys = [Key("bar")]
-        key = Key(name, subkeys=subkeys)
-        assert_object_attrs(key, {**default_key_attrs, "name": name, "subkeys": subkeys, "default": SUBKEYS})
-
         validator = validators.choice([1, 2, 3])
-        key = Key(name, validator=validator)
-        assert_object_attrs(key, {**default_key_attrs, "name": name, "validator": validator})
+        key = Key(validator=validator)
+        assert_object_attrs(key, {**default_key_attrs, "validator": validator})
+
+        class SubkeyValue(Config):
+
+            bar = Key()
+
+        key = Key(subkey_container=SubkeyValue)
+        assert_object_attrs(
+            key, {**default_key_attrs, "subkey_container": SubkeyValue, "default": SUBKEYS})
+        assert key.get_subkey_container() is SubkeyValue
 
         # test errors
         with pytest.raises(TypeError):
-            Key(name, type_=[int])
+            Key(type_=[int])
 
         with pytest.raises(TypeError):
-            Key(name, type_=int, default=1.3)
+            Key(type_=int, default=1.3)
 
         with pytest.raises(TypeError):
-            Key(name, type_=int, default=None)
+            Key(type_=int, default=None)
 
         with pytest.raises(TypeError):
-            Key(name, default={"bar": 1})
+            Key(default={"bar": 1})
 
         with pytest.raises(ValueError):
-            Key(name, default=SUBKEYS)
+            Key(default=SUBKEYS)
 
         with pytest.raises(TypeError):
-            Key(name, validator=lambda x: x % 2 == 0)
+            Key(validator=lambda x: x % 2 == 0)
 
-    def test_from_dict(self, default_key_attrs):
+        class BadSubkeyValue:
+            pass
+
+        with pytest.raises(TypeError):
+            Key(subkey_container=BadSubkeyValue)
+
+    def test_get_value(self):
         """
-        Test for the ``from_dict`` method.
+        Test for the ``get_value`` method.
         """
-        key_dict = {
-            "name": "foo",
-            "description": "bar",
-            "default": 1,
-        }
-        key = Key.from_dict(key_dict)
-        assert_object_attrs(key, {**default_key_attrs, **key_dict})
+        value = Key().get_value()
+        assert value is None
 
-        key_dict = {
-            "name": "foo",
-            "subkeys": [
-                {
-                    "name": "bar",
-                    "default": 2,
-                },
-                Key("baz"),
-            ],
-        }
-        key = Key.from_dict(key_dict)
-        expected_attrs = {
-            **default_key_attrs,
-            "name": key_dict["name"],
-            "default": SUBKEYS,
-            "subkeys__len": 2,
-        }
-        expected_attrs.pop("subkeys")
-        assert_object_attrs(key, expected_attrs)
+        value = Key(default=None).get_value()
+        assert value is None
 
-        assert len(key.subkeys) == 2
-        assert_object_attrs(key.subkeys[0], {
-            **default_key_attrs,
-            "name": key_dict["subkeys"][0]["name"],
-            "default": key_dict["subkeys"][0]["default"],
-        })
-        assert_object_attrs(key.subkeys[1], {
-            **default_key_attrs,
-            "name": key_dict["subkeys"][1].name,
-        })
+        value = Key(default=None).get_value(True)
+        assert value is True
 
-    # test errors
-    with pytest.raises(TypeError):
-        Key.from_dict({"subkeys": 1})
+        value = Key(default=1).get_value()
+        assert value == 1
 
-    @mock.patch("fica.key.Config")
-    def test_get_subkeys_as_config(self, mocked_config):
-        """
-        Test for the ``get_subkeys_as_config`` method.
-        """
-        key = Key("foo")
-        assert key.get_subkeys_as_config() is None
-        mocked_config.assert_not_called()
+        value = Key(default=1).get_value(2)
+        assert value == 2
 
-        key = Key("foo", subkeys=[Key("bar")])
-        key.get_subkeys_as_config()
-        mocked_config.assert_called_with(key.subkeys)
+        value = value = Key(default=1, type_=(int, float), allow_none=True).get_value(None)
+        assert value is None
 
-    def test_to_pair(self):
-        """
-        Test for the ``to_pair`` method.
-        """
-        name = "foo"
-        pair = Key(name).to_pair()
-        assert pair is None
+        class SubkeyValue(Config):
+            
+            bar = Key(default=1)
+            baz = Key()
 
-        pair = Key(name).to_pair(include_empty=True)
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value is None
+        value = Key(subkey_container=SubkeyValue).get_value()
+        assert value == SubkeyValue({"bar": 1})
 
-        pair = Key(name, default=None).to_pair()
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value is None
+        value = Key(default=1.2, subkey_container=SubkeyValue).get_value()
+        assert value == 1.2
 
-        pair = Key(name, default=None).to_pair(True)
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value is True
+        value = Key(subkey_container=SubkeyValue).get_value(2)
+        assert value == 2
 
-        pair = Key(name, default=1).to_pair()
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value == 1
+        value = Key(subkey_container=SubkeyValue).get_value({"bar": 2})
+        assert value == SubkeyValue({"bar": 2})
 
-        pair = Key(name, default=1).to_pair(2)
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value == 2
-
-        pair = pair = Key(name, default=1, type_=(int, float), allow_none=True).to_pair(None)
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value is None
-
-        pair = Key(name, subkeys=[Key("bar", default=1), Key("baz")]).to_pair()
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value == {"bar": 1}
-
-        pair = Key(name, default=1.2, subkeys=[Key("bar", default=1), Key("baz")]).to_pair()
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value == 1.2
-
-        pair = Key(name, subkeys=[Key("bar", default=1), Key("baz")]).to_pair(2)
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value == 2
-
-        pair = Key(name, subkeys=[Key("bar", default=1), Key("baz")]).to_pair({"bar": 2})
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value == {"bar": 2}
-
-        pair = Key(name, subkeys=[Key("bar", default=1), Key("baz")]).to_pair({"bar": 2, "baz": 3})
-        assert isinstance(pair, KeyValuePair)
-        assert pair.key == name
-        assert pair.value == {"bar": 2, "baz": 3}
+        value = Key(subkey_container=SubkeyValue).get_value({"bar": 2, "baz": 3})
+        assert value == SubkeyValue({"bar": 2, "baz": 3})
 
         mocked_validator = mock.Mock(spec=_Validator)
-        validator_key = Key(name, validator=mocked_validator)
-        validator_key.to_pair()
+        validator_key = Key(validator=mocked_validator)
+        validator_key.get_value()
         mocked_validator.validate.assert_not_called()
 
         mocked_validator.validate.return_value = None
-        validator_key.to_pair(1)
+        validator_key.get_value(1)
         mocked_validator.validate.assert_called_with(1)
 
         mocked_validator.validate.return_value = "bad value"
         with pytest.raises(ValueError, match=fr".*{mocked_validator.validate.return_value}.*"):
-            validator_key.to_pair(1)
+            validator_key.get_value(1)
             mocked_validator.validate.assert_called_with(1)
 
         # test errors
         with pytest.raises(TypeError):
-            pair = Key(name, default=1, type_=(int, float)).to_pair("quux")
+            value = Key(default=1, type_=(int, float)).get_value("quux")
 
         with pytest.raises(TypeError):
-            pair = Key(name, default=1, type_=(int, float)).to_pair(None)
+            value = Key(default=1, type_=(int, float)).get_value(None)
+
+    def test_should_document_subkeys(self):
+        """
+        Test for the ``should_document_subkeys`` method.
+        """
+        class SubkeyValue(Config):
+
+            bar = Key()
+
+        key = Key(subkey_container=SubkeyValue)
+        assert key.should_document_subkeys() is True
+
+        key = Key()
+        assert key.should_document_subkeys() is False
