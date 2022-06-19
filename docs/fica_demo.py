@@ -1,28 +1,31 @@
 import fica
 
-CONFIG = fica.Config([
-    fica.Key(
-        name="foo",
+from typing import Any, Optional
+
+
+class Config(fica.Config):
+
+    foo: bool = fica.Key(
         description="a value for foo",
         default=False,
-    ),
-    fica.Key(
-        name="bar",
+    )
+
+    class BarValue(fica.Config):
+
+        baz: int = fica.Key(
+            default=1,
+        )
+
+        qux: str = fica.Key(
+            default="qux",
+            description="a value for qux"
+        )
+
+    bar: BarValue = fica.Key(
         description="a value for bar",
-        subkeys=[
-            fica.Key(
-                name="baz",
-                default=1,
-            ),
-            fica.Key(
-                name="qux",
-                default="qux",
-                description="a value for qux"
-            )
-        ]
-    ),
-    fica.Key(
-        name="quuz",
+        subkey_container=BarValue,
+    )
+
+    quuz: Optional[Any] = fica.Key(
         description="a value for quuz",
-    ),
-])
+    )

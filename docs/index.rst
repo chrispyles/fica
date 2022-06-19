@@ -205,15 +205,15 @@ For example, say that we have the following in a file called ``fica_demo.py``:
 .. literalinclude:: fica_demo.py
     :language: python
 
-To document the object ``fica_demo.CONFIG``, you would use the following in your RST file:
+To document the object ``fica_demo.Config``, you would use the following in your RST file:
 
 .. code-block:: rst
 
-    .. fica:: fica_demo.CONFIG
+    .. fica:: fica_demo.Config
 
 This would produce the following:
 
-.. fica:: fica_demo.CONFIG
+.. fica:: fica_demo.Config
 
 Note that even though the default for ``quuz`` is :py:obj:`fica.EMPTY` (and would therefore not be
 included in the dictionary returned by :py:meth:`fica.Config.to_dict` unless specified by the user),
@@ -224,12 +224,12 @@ The default format for configurations is YAML, but you can also choose JSON by s
 
 .. code-block:: rst
 
-    .. fica:: fica_demo.CONFIG
+    .. fica:: fica_demo.Config
        :format: json
 
 This produces:
 
-.. fica:: fica_demo.CONFIG
+.. fica:: fica_demo.Config
     :format: json
 
 
