@@ -128,7 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.vscode/settings.json
+.vscode
 .doctrees/
 
 # ignore docs build
