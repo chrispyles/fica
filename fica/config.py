@@ -1,6 +1,6 @@
 """Configuration objects"""
 
-from typing import Any, Dict, Set
+from typing import Any, Dict, List
 
 
 class Config:
@@ -32,7 +32,8 @@ class Config:
                 try:
                     value = getattr(cls, k).get_value(v)
                 except Exception as e:
-                    raise RuntimeError(f"An error occurred while processing key '{k}': {e}")
+                    raise RuntimeError(f"An error occurred while processing key '{k}': " \
+                        f"{type(e).__name__}: {e}")
 
                 setattr(self, k, value)
                 seen_keys.add(k)
@@ -42,19 +43,15 @@ class Config:
             if k not in seen_keys:
                 setattr(self, k, getattr(cls, k).get_value())
 
-    def _get_keys_(self) -> Set[str]:
+    def _get_keys_(self) -> List[str]:
         """
         Get a ``set`` containing the attribute names corresponding to all keys of this config.
 
         Returns:
-            ``set[str]``: the attribute names of all keys
+            ``list[str]``: the attribute names of all keys
         """
         cls = type(self)
-        keys = set()
-        for attr in dir(cls):
-            if isinstance(getattr(cls, attr), Key):
-                keys.add(attr)
-        return keys
+        return [a for a in dir(cls) if isinstance(getattr(cls, a), Key)]
 
     def __eq__(self, other: Any) -> bool:
         """

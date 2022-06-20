@@ -178,5 +178,8 @@ class TestKey:
         key = Key(subkey_container=SubkeyValue)
         assert key.should_document_subkeys() is True
 
+        key = Key(subkey_container=SubkeyValue, default=1)
+        assert key.should_document_subkeys() is False
+
         key = Key()
         assert key.should_document_subkeys() is False

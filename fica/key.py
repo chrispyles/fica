@@ -8,7 +8,7 @@ from .validators import _Validator
 
 class _Empty:
     """
-    A singleton object representing an empty default value.
+    A singleton object representing an empty value.
     """
 
     def __repr__(self) -> str:
@@ -182,4 +182,4 @@ class Key:
         Returns:
             ``bool``: whether this class has subkeys that should be documented
         """
-        return self.subkey_container is not None
+        return self.subkey_container is not None and self.default is SUBKEYS
