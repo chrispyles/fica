@@ -1,6 +1,6 @@
 """Configuration keys"""
 
-from typing import Any, List, Optional, Tuple, Type, Union
+from typing import Any, Optional, Tuple, Type, Union
 
 from .config import Config
 from .validators import _Validator
@@ -139,13 +139,12 @@ class Key:
         """
         return self.subkey_container
 
-    def get_value(self, user_value: Optional[Any] = EMPTY, update: bool = False) -> Any:
+    def get_value(self, user_value: Any = EMPTY) -> Any:
         """
-        Convert this key to a :py:class:`KeyValuePair` with the provided user-specified value.
+        Get the value of this key taking into account the value specified by the user, if any.
 
         Args:
             user_value (``object``): the value specified by the user
-            update (``bool``): whether an update is being performed
 
         Returns:
             ``object``: the value of the key, taking into account the user-specified value
@@ -190,5 +189,3 @@ class Key:
             ``bool``: whether this class has subkeys that should be documented
         """
         return self.subkey_container is not None and self.default is SUBKEYS
-
-# TODO: docstrings
