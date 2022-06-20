@@ -18,12 +18,12 @@ LEXER_OVERRIDES = {
 
 def import_and_get_config(object_path: str, exporter_type: str) -> str:
     """
-    Import a :py:class:`Config<fica.Config>` object from a library and return its exported
+    Import a :py:class:`Config<fica.Config>` subclass from a library and return its exported
     documentation string in the specified format.
 
     Args:
         object_path (``str``): a string containing the object to import and the library it is
-            imported from, e.g. ``fica_demo.CONFIG``
+            imported from, e.g. ``fica_demo.Config``
         exporter_type (``str``): the type of exporter to use; see
             :py:func:`fica.exporter.create_exporter`
 

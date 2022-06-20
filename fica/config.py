@@ -1,104 +1,80 @@
 """Configuration objects"""
 
-from collections.abc import Iterable
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 
 class Config:
     """
     A class defining the structure of configurations expected by an application.
 
-    Configurations are represented as key-value pairs, where the application defines the structure
-    of the expected configurations and the user provides some subset of the key-value pairs, which
-    are processed and populated by this class.
+    Configuration keys are represented as fields declared in a subclass of this class, whose default
+    values are instances of :py:class:`fica.Key`:
+
+    .. code-block:: python
+
+        class MyConfig(fica.Config):
+
+            foo = fica.Key(description="a value for foo")
 
     Args:
-        keys (``list[Key]``): the list of keys expected in the configuration
+        user_config (``dict[str, object]``): a dictionary containing the configurations specified
+            by the user
     """
 
-    keys: List["Key"]
-    """the list of keys expected in the configuration"""
+    def __init__(self, user_config: Dict[str, Any] = {}) -> None:
+        if not isinstance(user_config, dict):
+            raise TypeError("The user-specified configurations must be passed as a dictionary")
 
-    def __init__(self, keys: List["Key"]) -> None:
-        if not isinstance(keys, Iterable) or not all(isinstance(e, Key) for e in keys):
-            raise TypeError("'keys' must be a list (or other iterable) of keys")
+        if not all(isinstance(k, str) for k in user_config):
+            raise TypeError(
+                "Some keys of the user-specified configurations dictionary are not strings")
 
-        if not isinstance(keys, list):
-            keys = list(keys)
+        cls = type(self)
+        all_keys = self._get_keys_()
+        seen_keys = set()
+        for k, v in user_config.items():
+            if k in all_keys:
+                try:
+                    value = getattr(cls, k).get_value(v)
+                except Exception as e:
+                    # wrap the error message with one containing the key name
+                    raise type(e)(f"An error occurred while processing key '{k}': {e}")
 
-        self.keys = keys
+                setattr(self, k, value)
+                seen_keys.add(k)
+
+        # set values for unspecified keys
+        for k in all_keys:
+            if k not in seen_keys:
+                setattr(self, k, getattr(cls, k).get_value())
+
+    def _get_keys_(self) -> List[str]:
+        """
+        Get a ``list`` containing the attribute names corresponding to all keys of this config.
+
+        The list is constructed using ``dir``, so its elements should be sorted in ascending order.
+
+        Returns:
+            ``list[str]``: the attribute names of all keys
+        """
+        cls = type(self)
+        return [a for a in dir(cls) if isinstance(getattr(cls, a), Key)]
 
     def __eq__(self, other: Any) -> bool:
         """
         Determine whether another object is equal to this config. An object is equal to a config iff
-        it is also a config and has the same keys.
+        it is also a config of the same type and has the same key values.
         """
-        return isinstance(other, type(self)) and self.keys == other.keys
+        if not isinstance(other, type(self)):
+            return False
 
-    @classmethod
-    def from_list(cls, lst: List[Union["Key", Dict[str, Any]]]) -> "Config":
+        return all(getattr(self, k) == getattr(other, k) for k in self._get_keys_())
+
+    def __getitem__(self, key) -> Any:
         """
-        Create a ``Config`` from a list of ``Key`` s or ``dict`` s.
-
-        Args:
-            lst (``list[Key | dict[str, object]]``): the list of keys
-
-        Returns:
-            ``Config``: the configuration
+        Redirect indexing with ``[]`` to ``getattr``.
         """
-        keys = [e if isinstance(e, Key) else Key.from_dict(e) for e in lst]
-        return cls(keys)
-
-    def _get_keys_dict(self) -> Dict[str, "Key"]:
-        """
-        Generate a dictionary mapping key names to ``Key`` objects.
-
-        Returns:
-            ``dict[str, Key]``: the dictionary
-        """
-        return {k.name: k for k in self.keys}
-
-    def get_key(self, key: str) -> "Key":
-        """
-        Get the :py:class:`fica.Key` with the specified name.
-
-        Args:
-            key (``str``): the name of the key
-
-        Returns:
-            :py:class:`fica.Key`: the key
-        """
-        return self._get_keys_dict()[key]
-
-    def to_dict(self, user_config: Dict[str, Any] = {}, include_empty=False) -> Dict[str, Any]:
-        """
-        Generate a dictionary with all keys present, adding values from the provided user input.
-
-        Args:
-            user_config (``dict[str, object]``): the user-inputted configurations
-            include_empty (``bool``): whether configurations that aren't overridden whose defaults
-                are :py:obj:`fica.EMPTY` should be included in the resulting dictionary
-
-        Returns:
-            ``dict[str, object]``: the dictionary of configurations
-        """
-        config = {}
-        keys_dict = self._get_keys_dict()
-        for k, v in user_config.items():
-            if k not in keys_dict:
-                config[k] = v
-            else:
-                pair = keys_dict[k].to_pair(v, include_empty=include_empty)
-                if pair is not None:
-                    config[pair.key] = pair.value
-
-        for k, v in keys_dict.items():
-            if k not in config:
-                pair = v.to_pair(include_empty=include_empty)
-                if pair is not None:
-                    config[pair.key] = pair.value
-
-        return config
+        return getattr(self, key)
 
 
 from .key import Key

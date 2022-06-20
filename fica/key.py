@@ -1,7 +1,6 @@
 """Configuration keys"""
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, List, Optional, Tuple, Type, Union
 
 from .config import Config
 from .validators import _Validator
@@ -9,7 +8,7 @@ from .validators import _Validator
 
 class _Empty:
     """
-    A singleton object representing an empty default value.
+    A singleton object representing an empty value.
     """
 
     def __repr__(self) -> str:
@@ -29,19 +28,6 @@ EMPTY = _Empty()
 SUBKEYS = _Subkeys()
 
 
-@dataclass
-class KeyValuePair:
-    """
-    A dataclass representing a processed key-value pair.
-    """
-
-    key: str
-    """the configuration key"""
-
-    value: Any
-    """the configuration value"""
-
-
 class Key:
     """
     A class representing a key in a configuration.
@@ -59,25 +45,21 @@ class Key:
     automatically set to :py:data:`fica.SUBKEYS`.
 
     Args:
-        name (``str``): the name of the key
         description (``str | None``): a description of the configuration for documentation
         default (``object``): the default value of the key
-        subkeys (``list[Key]``): subkeys of this configuration
-        type (``type | tuple[type]``): valid type(s) for the value of this configuration
+        type_ (``type | tuple[type]``): valid type(s) for the value of this configuration
         allow_none (``bool``): whether ``None`` is a valid value for the configuration
+        validator (validator or ``None``): a validator for validating user-specified values
+        subkey_container (subclass of :py:class:`fica.Config`): an (uninstantiated) config class
+            containing the subkeys of this key
+        enforce_subkeys (``bool``): whether to enforce the use of the subkey container if any
     """
-
-    name: str
-    """the name of the key"""
 
     description: Optional[str]
     """a description of the configuration for documentation"""
 
-    default: Any
+    default: Optional[Any]
     """the default value of the key"""
-
-    subkeys: Optional[List["Key"]]
-    """subkeys of this configuration"""
 
     type_: Optional[Union[Type, Tuple[Type]]]
     """valid type(s) for the value of this configuration"""
@@ -88,22 +70,28 @@ class Key:
     validator: Optional[_Validator]
     """a validator for user-specified values"""
 
+    subkey_container: Optional[Type[Config]]
+    """a config class containing the subkeys of this key"""
+
+    enforce_subkeys: bool
+    """whether to enforce the use of the subkey container if any"""
+
     def __init__(
         self,
-        name: str,
         description: Optional[str] = None,
-        default: Any = EMPTY,
-        subkeys: Optional[List["Key"]] = None,
+        default: Optional[Any] = None,
         type_: Optional[Union[Type, Tuple[Type]]] = None,
         allow_none: bool = False,
         validator: Optional[_Validator] = None,
+        subkey_container: Optional[Type[Config]] = None,
+        enforce_subkeys: bool = False,
     ) -> None:
         if type_ is not None:
             if not (isinstance(type_, Type) or (isinstance(type_, tuple) and \
                     all(isinstance(e, Type) for e in type_))):
                 raise TypeError("type_ must be a single type or tuple of types")
 
-            if default is not EMPTY and default is not SUBKEYS and \
+            if default is not SUBKEYS and \
                     not (isinstance(default, type_) or (allow_none and default is None)):
                 raise TypeError("The default value is not of the specified type(s)")
 
@@ -113,59 +101,25 @@ class Key:
         if validator is not None and not isinstance(validator, _Validator):
             raise TypeError("validator is not a valid validator")
 
-        if default is EMPTY and subkeys is not None:
+        if subkey_container is not None and not issubclass(subkey_container, Config):
+            raise TypeError("The provided subkey_container is not a subclass of fica.Config")
+
+        if default is None and subkey_container is not None:
             default = SUBKEYS
 
-        if default is SUBKEYS and subkeys is None:
-            raise ValueError("Cannot default to subkeys when there are no subkeys specified")
+        if default is SUBKEYS and subkey_container is None:
+            raise ValueError("Cannot default to subkeys when no subkey_container is provided")
 
-        self.name = name
+        if enforce_subkeys and subkey_container is None:
+            raise ValueError("Cannot enforce subkeys when no subkey container is provided")
+
         self.description = description
         self.default = default
-        self.subkeys = subkeys
         self.type_ = type_
         self.allow_none = allow_none
         self.validator = validator
-
-    def __eq__(self, other: Any) -> bool:
-        """
-        Determine whether another object is equal to this key. An object is equal to a key iff it
-        is also a key and has the same attributes.
-        """
-        return isinstance(other, type(self)) and self.name == other.name and \
-            self.description == other.description and self.default == other.default and \
-            self.subkeys == other.subkeys and self.type_ == other.type_ and \
-            self.allow_none == other.allow_none
-
-    @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> "Key":
-        """
-        Create a :py:class:`Key` from a dictionary whose keys match constructor argument names.
-
-        Args:
-            dct (``dict[str, object]``): the dictionary of constructor arguments
-
-        Returns:
-            :py:class:`Key`: the key object
-        """
-        dct = {**dct}
-        subkeys = dct.pop("subkeys", None)
-        if subkeys:
-            if not isinstance(subkeys, list):
-                raise TypeError("'subkeys' provided to Key.from_dict is not a list")
-
-            subkeys = [Key.from_dict(s) if not isinstance(s, Key) else s for s in subkeys]
-
-        return cls(**dct, subkeys=subkeys)
-
-    def get_name(self) -> str:
-        """
-        Get the name of the key.
-
-        Returns:
-            ``str``: the name of the key
-        """
-        return self.name
+        self.subkey_container = subkey_container
+        self.enforce_subkeys = enforce_subkeys
 
     def get_description(self) -> Optional[str]:
         """
@@ -176,17 +130,16 @@ class Key:
         """
         return self.description
 
-    def get_subkeys_as_config(self) -> Optional[Config]:
+    def get_subkey_container(self) -> Optional[Type[Config]]:
         """
-        Convert the subkeys of this key to a :py:class:`fica.Config` object.
+        Get the subkey container class.
 
         Returns:
-            :py:class:`fica.Config` or ``None``: the config if the default value is
-            :py:obj:`fica.SUBKEYS` otherwise ``None``
+            subclass of :py:class:`fica.Config`: the uninstantiated subkey container class
         """
-        return Config(self.subkeys) if self.default is SUBKEYS else None
+        return self.subkey_container
 
-    def to_pair(self, user_value: Any = EMPTY, include_empty=False) -> Optional[KeyValuePair]:
+    def get_value(self, user_value: Optional[Any] = EMPTY) -> Any:
         """
         Convert this key to a :py:class:`KeyValuePair` with the provided user-specified value.
 
@@ -196,39 +149,45 @@ class Key:
                 value is provided and the default is :py:obj:`fica.EMPTY`
 
         Returns:
-            :py:class:`KeyValuePair`: the key-value pair if the key should be present,
-            otherwise ``None``
+            ``object``: the value of the key, taking into account the user-specified value
 
         Raises:
             ``TypeError``: if the user-specified value is not of the correct type
             ``ValueError``: if the user-specified value fails validation
         """
-        value = user_value
-        if value is EMPTY:
+        if user_value is EMPTY:
             if self.default is SUBKEYS:
-                value = Config(self.subkeys).to_dict()
-            elif self.default is EMPTY:
-                if include_empty:
-                    return KeyValuePair(self.name, None)
-                return None
+                return self.subkey_container()
+
             else:
-                value = self.default
+                return self.default
+
         else:
-            if not ((self.type_ is None or isinstance(value, self.type_)) or \
-                    (self.allow_none and value is None)):
-                raise TypeError(
-                    f"User-specified value for key '{self.name}' is not of the correct type")
+            if not ((self.type_ is None or isinstance(user_value, self.type_)) or \
+                    (self.allow_none and user_value is None)):
+                raise TypeError("User-specified value is not of the correct type")
 
             # validate the value
             if self.validator is not None:
-                err = self.validator.validate(value)
+                err = self.validator.validate(user_value)
                 if err is not None:
                     raise ValueError(f"User-specified value failed validation: {err}")
 
             # handle user-inputted dict w/ missing subkeys
-            if self.subkeys is not None and isinstance(value, dict):
-                conf = Config(self.subkeys).to_dict(value)
-                conf.update(value)
-                value = conf
+            if self.subkey_container is not None:
+                if isinstance(user_value, dict):
+                    return self.subkey_container(user_value)
 
-        return KeyValuePair(self.name, value)
+                elif self.enforce_subkeys:
+                    raise ValueError("Cannot override subkeys for a key with enforced subkeys")
+
+            return user_value
+
+    def should_document_subkeys(self) -> bool:
+        """
+        Determine whether this key has subkeys that should be documented.
+
+        Returns:
+            ``bool``: whether this class has subkeys that should be documented
+        """
+        return self.subkey_container is not None and self.default is SUBKEYS
