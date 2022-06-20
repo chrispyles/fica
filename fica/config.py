@@ -32,8 +32,8 @@ class Config:
                 try:
                     value = getattr(cls, k).get_value(v)
                 except Exception as e:
-                    raise RuntimeError(f"An error occurred while processing key '{k}': " \
-                        f"{type(e).__name__}: {e}")
+                    # wrap the error message with one containing the key name
+                    raise type(e)(f"An error occurred while processing key '{k}': {e}")
 
                 setattr(self, k, value)
                 seen_keys.add(k)

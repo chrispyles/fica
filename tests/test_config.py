@@ -39,7 +39,11 @@ class TestConfig:
 
         sample_config.foo = mock.MagicMock(spec=Key)
         sample_config.foo.get_value.side_effect = TypeError("bad value")
-        with pytest.raises(RuntimeError, match=r".*key 'foo': TypeError: bad value"):
+        with pytest.raises(TypeError, match=r".*key 'foo': bad value"):
+            sample_config({"foo": 1})
+
+        sample_config.foo.get_value.side_effect = ValueError("bad value")
+        with pytest.raises(ValueError, match=r".*key 'foo': bad value"):
             sample_config({"foo": 1})
 
     def test___eq__(self, sample_config):

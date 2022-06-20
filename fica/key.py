@@ -75,6 +75,7 @@ class Key:
     subkey_container: Optional[Type[Config]]
     """a config class containing the subkeys of this key"""
 
+    # TODO: set default to None?
     def __init__(
         self,
         description: Optional[str] = None,
@@ -157,6 +158,7 @@ class Key:
                 return None
             else:
                 value = self.default
+
         else:
             if not ((self.type_ is None or isinstance(value, self.type_)) or \
                     (self.allow_none and value is None)):
