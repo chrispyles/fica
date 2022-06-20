@@ -17,11 +17,12 @@ def default_key_attrs():
     """
     return {
         "description": None,
-        "default": EMPTY,
+        "default": None,
         "type_": None,
         "allow_none": False,
         "validator": None,
         "subkey_container": None,
+        "enforce_subkeys": False,
     }
 
 
@@ -47,12 +48,12 @@ class TestKey:
         assert key.get_subkey_container() is None
 
         type_ = int
-        key = Key(type_=type_)
-        assert_object_attrs(key, {**default_key_attrs, "type_": type_})
+        key = Key(type_=type_, default=1)
+        assert_object_attrs(key, {**default_key_attrs, "type_": type_, "default": 1})
 
         type_ = int, float
-        key = Key(type_=type_)
-        assert_object_attrs(key, {**default_key_attrs, "type_": type_})
+        key = Key(type_=type_, default=1.0)
+        assert_object_attrs(key, {**default_key_attrs, "type_": type_, "default": 1.0})
 
         default = 1
         key = Key(default=default)
@@ -60,6 +61,9 @@ class TestKey:
 
         key = Key(default=default, allow_none=True)
         assert_object_attrs(key, {**default_key_attrs, "default": default, "allow_none": True})
+
+        key = Key(type_=type_, allow_none=True)
+        assert_object_attrs(key, {**default_key_attrs, "type_": type_, "allow_none": True})
 
         descr = "bar"
         key = Key(description=descr)
@@ -78,6 +82,14 @@ class TestKey:
         assert_object_attrs(
             key, {**default_key_attrs, "subkey_container": SubkeyValue, "default": SUBKEYS})
         assert key.get_subkey_container() is SubkeyValue
+
+        key = Key(subkey_container=SubkeyValue, enforce_subkeys=True)
+        assert_object_attrs(key, {
+            **default_key_attrs,
+            "subkey_container": SubkeyValue,
+            "default": SUBKEYS,
+            "enforce_subkeys": True,
+        })
 
         # test errors
         with pytest.raises(TypeError):
@@ -103,6 +115,9 @@ class TestKey:
 
         with pytest.raises(TypeError):
             Key(subkey_container=BadSubkeyValue)
+
+        with pytest.raises(ValueError):
+            Key(enforce_subkeys=True)
 
     def test_get_value(self):
         """
@@ -143,7 +158,8 @@ class TestKey:
         value = Key(subkey_container=SubkeyValue).get_value({"bar": 2})
         assert value == SubkeyValue({"bar": 2})
 
-        value = Key(subkey_container=SubkeyValue).get_value({"bar": 2, "baz": 3})
+        value = \
+            Key(subkey_container=SubkeyValue, enforce_subkeys=True).get_value({"bar": 2, "baz": 3})
         assert value == SubkeyValue({"bar": 2, "baz": 3})
 
         mocked_validator = mock.Mock(spec=_Validator)
@@ -166,6 +182,9 @@ class TestKey:
 
         with pytest.raises(TypeError):
             value = Key(default=1, type_=(int, float)).get_value(None)
+
+        with pytest.raises(ValueError):
+            value = Key(subkey_container=SubkeyValue, enforce_subkeys=True).get_value(1)
 
     def test_should_document_subkeys(self):
         """
