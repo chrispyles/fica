@@ -7,9 +7,14 @@ class Config:
     """
     A class defining the structure of configurations expected by an application.
 
-    Configurations are represented as key-value pairs, where the application defines the structure
-    of the expected configurations and the user provides some subset of the key-value pairs, which
-    are processed and populated by this class.
+    Configuration keys are represented as fields declared in a subclass of this class, whose default
+    values are instances of :py:class:`fica.Key`:
+
+    .. code-block:: python
+
+        class MyConfig(fica.Config):
+
+            foo = fica.Key(description="a value for foo")
 
     Args:
         user_config (``dict[str, object]``): a dictionary containing the configurations specified
