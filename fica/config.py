@@ -45,7 +45,9 @@ class Config:
 
     def _get_keys_(self) -> List[str]:
         """
-        Get a ``set`` containing the attribute names corresponding to all keys of this config.
+        Get a ``list`` containing the attribute names corresponding to all keys of this config.
+
+        The list is constructed using ``dir``, so its elements should be sorted in ascending order.
 
         Returns:
             ``list[str]``: the attribute names of all keys
@@ -65,6 +67,7 @@ class Config:
 
     def __getitem__(self, key) -> Any:
         """
+        Redirect indexing with ``[]`` to ``getattr``.
         """
         return getattr(self, key)
 

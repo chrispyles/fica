@@ -19,6 +19,12 @@ class ConfigExporter(ABC):
     @classmethod
     def recursively_populate_config_dict(cls, instc: Config, d: Dict[str, Any]) -> None:
         """
+        Populate a dictionary with the values for each key in the provided :py:class:`fica.Config`
+        instance, recursing into nested :py:class:`fica.Config` objects.
+
+        Args:
+            instc (:py:class:`fica.Config`): an instance of a :py:class:`fica.Config` subclass
+            d (``dict[str, object]``): the dictionary to populate with the default values
         """
         for k in instc._get_keys_():
             v = getattr(instc, k)
@@ -31,6 +37,14 @@ class ConfigExporter(ABC):
     @classmethod
     def config_to_dict(cls, config: Type[Config]) -> Dict[str, Any]:
         """
+        Create a dictionary mapping each key name to its default value (or a dictionary of default
+        values in the case of subkeys) for the provided :py:class:`fica.Config` subclass.
+
+        Args:
+            config (``type[Config]``): the :py:class:`fica.Config` subclass
+
+        Returns:
+            ``dict[str, Any]``: the generated dictionary
         """
         instc = config()
         d = {}
