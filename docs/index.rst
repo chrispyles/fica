@@ -1,8 +1,3 @@
-.. fica documentation master file, created by
-    sphinx-quickstart on Tue Mar 15 22:20:55 2022.
-    You can adapt this file completely to your liking, but it should at least
-    contain the root `toctree` directive.
-
 ``fica`` documentation
 ======================
 
@@ -13,84 +8,54 @@
     api_reference
 
 ``fica`` is a Python library for managing and documenting the structure of user-specified
-configurations. With it, you can create dictionaries of configurations that contain default values
-and descriptions for easily configuring applications with user input and documenting available
-configurations and their defaults.
+configurations. With it, you can create Python classes with easily-documentable fields that make it
+easy to configure applications with user input and leverage the code analysis and completion tools
+provided by your IDE to make development quicker and less error-prone.
 
 
-Creating configurations
-=======================
+Defining configurations
+-----------------------
 
-``fica``'s Python API provides to main classes for defining the structure of configurations:
-:ref:`keys<keys>` and :ref:`configs<configs>`.
+Configurations in ``fica`` are represented as subclasses of the :py:class:`fica.Config` class which
+contain fields set to instances of the :py:class:`fica.Key` class which stores information about the
+key (e.g. description, default value, subkeys).
 
-
-.. _keys:
-
-Keys
-----
-
-Configurations in ``fica`` are represented as a list of keys which have a name and optionally a
-default value, subkeys, and a description. These keys are represented by the :py:class:`fica.Key`
-class, which accepts all of these as arguments.
-
-The simplest kind of key, one with no default value or subkeys, is created by passing the name of
-the key to the constructor:
+Here's a simple configuration class:
 
 .. code-block:: python
 
-    fica.Key("foo")
+    class MyConfig(fica.Config):
 
-To set a default, provide a value to the ``default`` argument:
+        foo = fica.Key(description="a value for foo")
 
-.. code-block:: python
+        bar = fica.Key(description="a value for bar", default=1)
 
-    fica.Key("foo", default=False)
+As shown above, you can provide a description for the key using the ``description`` argument and
+a default value using the ``default`` argument. If you don't provide a default value, ``fica`` will
+default the value to ``None``.
 
-If you don't provide a default value, ``fica`` sets it to the special value :py:obj:`fica.EMPTY`,
-a singleton object that ``fica`` provides representing that a key should not be included in the
-configurations dictionary unless a value is specified by the user.
-
-To include a description in your :ref:`documentation<documenting>`, pass a string to the
-``description`` argument:
-
-.. code-block:: python
-
-    fica.Key("foo", description="a value for foo")
-
-For keys that map to a dictionary of more configurations, keys provide the ``subkeys`` argument.
-This argument should receive a list of :py:class:`fica.Key` objects that represent the key's
-subkeys.
+For keys that have nested subconfigurations, you can define a nested :py:class:`fica.Config` class
+and pass this to the ``subkey_container`` argument. ``fica`` will handle instantiating and
+populating nested config ojects when you instatiate the root config object.
 
 .. code-block:: python
 
-    fica.Key("foo", description="configurations for foo", subkeys=[
-        fica.Key("bar", description="a value for bar"),
-        fica.Key("baz", description="a value for baz"),
-    ])
+    class MyConfig(fica.Config):
 
-If you provide subkeys but do not specify a default value, ``fica`` automatically sets the default
-to the special value :py:obj:`fica.SUBKEYS`, another singleton object provided by ``fica`` that
-represents that a key's default value should be a dictionary mapping its subkeys to their default
-values.
+        foo = fica.Key(description="a value for foo")
 
-In order to facilitate easily loading configuration structures from external files, keys also
-have a :py:meth:`from_dict<fica.Key.from_dict>` method that turns a Python dictionary into a
-:py:class:`fica.Key` instance provided a dictionary mapping constructor argument names to their
-values:
+        class BarValue:
 
-.. code-block:: python
+            baz = fica.Key(description="a value for baz", default=True)
 
-    fica.Key.from_dict({
-        "name": "foo",
-        "default": False,
-        "subkeys": [
-            {
-                "name": "bar",
-                "default": False,
-            },
-        ],
-    })
+            quux = fica.Key(description="a value for quux", default=1)
+
+        bar = fica.Key(description="a value for bar", subkey_container=BarValue)
+
+If you provide a subkey container but do not specify a default value, ``fica`` automatically sets
+the default to the special value :py:obj:`fica.SUBKEYS`, a singleton object provided by
+``fica`` that represents that a key's default value should be an instance of its subkey container
+class with its default values.
 
 
 Validating values
@@ -149,55 +114,102 @@ the correct type.
 A full list of available validators can be found in the :ref:`API reference<api_ref_validators>`.
 
 
-.. _configs:
+Using configurations
+--------------------
 
-Configurations
---------------
+The :py:class:`fica.Config` class provides a simple constructor that accepts as its only argument
+a ``dict`` mapping strings corresponding to field names to the values specified by the user. Any
+fields that don't have an entry in the dictionary are mapped to their default values in the
+resulting instance.
 
-Configurations are represented by the :py:class:`fica.Config` class, which can be instantiated by
-passing a list of :py:class:`fica.Key` instances to its constructor, or from a list of dictionaries
-via the :py:meth:`fica.Config.from_list` method.
-
-.. code-block:: python
-
-    fica.Config([
-        fica.Key("foo"),
-        fica.Key("bar"),
-    ])
-
-The :py:class:`fica.Config` class is how ``fica`` converts configurations provided by the user into
-a dictionary containing all keys with their default values. To do this, use the
-:py:meth:`fica.Config.to_dict` method, which takes as its only argument a dictionary containing the
-values specified by the user.
+Because the subkey containers are themselves subclasses of :py:class:`fica.Config`, users need only
+specify the keys in a nested structure that they wish to edit. In the example above, passing
+``{"bar": {"baz": False}}`` to the ``MyConfig`` constructor would produce a ``BarValue`` instance
+with ``baz`` set to ``False`` and ``quux`` set to ``1`` (its default).
 
 .. code-block:: python
 
-    config = fica.Config([...])
-    config.to_dict(user_config)
+    # this class is the same as above, but reproduced here for convenience
+    class MyConfig(fica.Config):
 
-The dictionary returned by :py:meth:`fica.Config.to_dict` contains every key-value pair in the
-dictionary passed to it (unless a value for a key in the configuration is not of the correct type,
-in which case a ``TypeError`` is raised). It also contains every other key in the configuration 
-not contained in the provided dictionary mapped to its default value unless its default is
-:py:obj:`fica.EMPTY`, in which case the key is *not* included in the returned dictionary.
+        foo = fica.Key(description="a value for foo")
 
-You can force ``fica`` to include keys mapped to :py:obj:`fica.EMPTY` by setting ``include_empty``
-to ``True``:
+        class BarValue:
+
+            baz = fica.Key(description="a value for baz", default=True)
+
+            quux = fica.Key(description="a value for quux", default=1)
+
+        bar = fica.Key(description="a value for bar", subkey_container=BarValue)
+
+
+    MyConfig({"foo": False})          # results in foo=False, bar={baz=True, quux=1}
+    MyConfig({"bar": {"baz": False}}) # results in foo=None, bar={baz=False, quux=1}
+    MyConfig("foo": False, "bar": 3}) # results in foo=False, bar=3
+
+Once you have instantiated the config class, accessing the values of each field is the same as any
+attribute access in Python. Fields that have subkey containers (and aren't defaulted/overridden to a
+value other than an instance of a config class) are mapped to instances of their subkey container
+class.
 
 .. code-block:: python
 
-    config.to_dict(user_config, include_empty=True)
+    >>> my_config = MyConfig()
+    >>> my_config.foo
+    >>> my_config.bar.baz
+    ... True
+    >>> my_config = MyConfig({"bar": 1})
+    >>> my_config.bar
+    ... 1
+
+By default, a user can override the default value of a key with subkeys to be some other value that
+will prevent the nested configurations from being accessible via the :py:class:`fica.Config`
+instance. For example, consider the following case:
+
+.. code-block:: python
+    
+    class MyConfig(fica.Config):
+
+        class BarValue:
+
+            baz = fica.Key(description="a value for baz", default=True)
+
+        bar = fica.Key(description="a value for bar", subkey_container=BarValue)
+    
+    my_config = MyConfig({"bar": 1})
+
+This results in ``my_config.bar`` being set to ``1``, meaning that attempts to access fields in the
+``BarValue`` config (i.e. ``my_config.bar.baz``) will error. To prevent users from being able to
+override the subkey container with their own value, set ``enforce_subkeys`` to ``True`` in the
+:py:class:`fica.Key` constructor. This will require that the user-specified value for that key be
+a dictionary that contains values for the fields of the subkey container.
+
+.. code-block:: python
+
+    class MyConfig(fica.Config):
+
+        class BarValue:
+
+            baz = fica.Key(description="a value for baz", default=True)
+
+        bar = fica.Key(
+            description="a value for bar", subkey_container=BarValue, enforce_subkeys=True)
+    
+    my_config = MyConfig({"bar": 1})              # throws an error
+
+    my_config = MyConfig({"bar": {"baz": False}})
+    my_config.bar.baz                             # returns False
 
 
 .. _documenting:
 
 Documenting configurations
-==========================
+--------------------------
 
 ``fica`` provides a Sphinx extension that can be used to create code blocks for documenting
 configurations, their default values, and their descriptions. The main piece of this extension is
 the ``fica`` directive, which uses Sphinx's code blocks to display the configurations. To use the
-directive, pass the importable name of a :py:class:`fica.Config` object as the only argument to
+directive, pass the importable name of a :py:class:`fica.Config` subclass as the only argument to
 the directive.
 
 For example, say that we have the following in a file called ``fica_demo.py``:
@@ -205,7 +217,7 @@ For example, say that we have the following in a file called ``fica_demo.py``:
 .. literalinclude:: fica_demo.py
     :language: python
 
-To document the object ``fica_demo.Config``, you would use the following in your RST file:
+To document the class ``fica_demo.Config``, you would use the following in your RST file:
 
 .. code-block:: rst
 
@@ -214,10 +226,6 @@ To document the object ``fica_demo.Config``, you would use the following in your
 This would produce the following:
 
 .. fica:: fica_demo.Config
-
-Note that even though the default for ``quuz`` is :py:obj:`fica.EMPTY` (and would therefore not be
-included in the dictionary returned by :py:meth:`fica.Config.to_dict` unless specified by the user),
-the documentation produced by ``fica`` still includes it mapped to ``None``.
 
 The default format for configurations is YAML, but you can also choose JSON by setting the
 ``format`` option to ``json``:
@@ -231,5 +239,3 @@ This produces:
 
 .. fica:: fica_demo.Config
     :format: json
-
-
