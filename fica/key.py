@@ -139,14 +139,13 @@ class Key:
         """
         return self.subkey_container
 
-    def get_value(self, user_value: Optional[Any] = EMPTY) -> Any:
+    def get_value(self, user_value: Optional[Any] = EMPTY, update: bool = False) -> Any:
         """
         Convert this key to a :py:class:`KeyValuePair` with the provided user-specified value.
 
         Args:
             user_value (``object``): the value specified by the user
-            include_empty (``bool``): whether to return a pair with the value ``None`` if no user
-                value is provided and the default is :py:obj:`fica.EMPTY`
+            update (``bool``): whether an update is being performed
 
         Returns:
             ``object``: the value of the key, taking into account the user-specified value
@@ -191,3 +190,5 @@ class Key:
             ``bool``: whether this class has subkeys that should be documented
         """
         return self.subkey_container is not None and self.default is SUBKEYS
+
+# TODO: docstrings

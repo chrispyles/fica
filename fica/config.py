@@ -21,7 +21,17 @@ class Config:
             by the user
     """
 
-    def __init__(self, user_config: Dict[str, Any] = {}) -> None:
+    def _validate_user_config(self, user_config: Dict[str, Any]) -> None:
+        """
+        Validate that a dictionary containing user-specified configuration values has the correct
+        format.
+
+        Args:
+            user_config (``dict[str, object]``): a dictionary of new configuration values
+
+        Raises:
+            ``TypeError``: if ``user_config`` is of the wrong type or structure
+        """
         if not isinstance(user_config, dict):
             raise TypeError("The user-specified configurations must be passed as a dictionary")
 
@@ -29,9 +39,10 @@ class Config:
             raise TypeError(
                 "Some keys of the user-specified configurations dictionary are not strings")
 
-        cls = type(self)
-        all_keys = self._get_keys_()
-        seen_keys = set()
+    def __init__(self, user_config: Dict[str, Any] = {}) -> None:
+        self._validate_user_config(user_config)
+
+        cls, all_keys = type(self), self._get_keys_()
         for k, v in user_config.items():
             if k in all_keys:
                 try:
@@ -41,12 +52,40 @@ class Config:
                     raise type(e)(f"An error occurred while processing key '{k}': {e}")
 
                 setattr(self, k, value)
-                seen_keys.add(k)
 
         # set values for unspecified keys
+        seen_keys = user_config.keys()
         for k in all_keys:
             if k not in seen_keys:
                 setattr(self, k, getattr(cls, k).get_value())
+
+    def update_(self, user_config: Dict[str, Any]):
+        """
+        Recursively update the values for keys of this configuration in-place.
+
+        Args:
+            user_config (``dict[str, object]``): a dictionary of new configuration values
+
+        Raises:
+            ``TypeError``: if ``user_config`` is of the wrong type or structure
+            ``Exception``: if an error occurs while parsing the specified value for a key
+        """
+        self._validate_user_config(user_config)
+
+        cls, all_keys = type(self), self._get_keys_()
+        for k, v in user_config.items():
+            if k in all_keys:
+                if isinstance(getattr(self, k), Config) and isinstance(v, dict):
+                    getattr(self, k).update_(v)
+
+                else:
+                    try:
+                        value = getattr(cls, k).get_value(v)
+                    except Exception as e:
+                        # wrap the error message with one containing the key name
+                        raise type(e)(f"An error occurred while processing key '{k}': {e}")
+
+                    setattr(self, k, value)
 
     def _get_keys_(self) -> List[str]:
         """
@@ -75,6 +114,13 @@ class Config:
         Redirect indexing with ``[]`` to ``getattr``.
         """
         return getattr(self, key)
+
+    def __repr__(self) -> str:
+        ret = f"{type(self).__name__}("
+        for k in self._get_keys_():
+            ret += f"{k}={getattr(self, k)}, "
+        ret = ret[:-2] + ")"
+        return ret
 
 
 from .key import Key
