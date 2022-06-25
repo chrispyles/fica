@@ -19,13 +19,14 @@ class TestJsonExporter:
         exported_config = JsonExporter().export(sample_config)
         assert exported_config == dedent("""\
             {
-              "foo": null,
-              "bar": {
-                "baz": 1
+              "bar": {        // bar
+                "baz": 1,     // baz
+                "quux": null
               },
-              "quuz": 1,
+              "foo": null,    // foo
+              "garply": 3,
               "grault": 2,
-              "garply": 3
+              "quuz": 1
             }
         """).strip()
 
@@ -41,12 +42,13 @@ class TestYamlExporter:
         """
         exported_config = YamlExporter().export(sample_config)
         assert exported_config == dedent("""\
-            foo: null
-            bar:
-              baz: 1
-            quuz: 1
-            grault: 2
+            bar:          # bar
+              baz: 1      # baz
+              quux: null
+            foo: null     # foo
             garply: 3
+            grault: 2
+            quuz: 1
         """).strip()
 
 

@@ -2,9 +2,9 @@
 
 import pytest
 
-from fica import Config, Key
+from unittest import mock
 
-from .utils import assert_object_attrs, CustomIterable
+from fica import Config, Key
 
 
 class TestConfig:
@@ -12,94 +12,79 @@ class TestConfig:
     Tests for ``fica.config.Config``.
     """
 
-    def test_constructor_and_getters(self, sample_keys):
+    def test_constructor_and_update_(self, sample_config):
         """
-        Tests for the ``Config`` constructor and attribute getters.
+        Tests for the ``Config`` constructor and the ``update_`` method.
         """
-        config = Config(sample_keys)
-        assert_object_attrs(config, {"keys": sample_keys})
+        config = sample_config()
+        for k, v in sample_config._expected_attrs.items():
+            assert getattr(config, k) == v
 
-        for key in sample_keys:
-            assert config.get_key(key.name) is key
-
-        # test iterable conversion
-        config = Config(CustomIterable(sample_keys))
-        assert config.keys == sample_keys
-
-        # test errors
-        with pytest.raises(TypeError):
-            Config(1)
-
-        with pytest.raises(TypeError):
-            Config([Key("foo"), 2])
-
-    def test_from_list_and___eq__(self, sample_keys):
-        """
-        Tests for the ``from_list`` and ``__eq__`` methods.
-        """
-        config = Config.from_list([
-            {
-                "name": "foo"
-            },
-            {
-                "name": "bar",
-                "subkeys": [
-                    {
-                        "name": "baz",
-                        "default": 1,
-                    },
-                    {
-                        "name": "quux",
-                    },
-                ],
-            },
-            {
-                "name": "quuz",
-                "default": 1,
-                "subkeys": [
-                    Key("corge", default=True),
-                ],
-            },
-            *sample_keys[3:],
-        ])
-        assert config == Config(sample_keys)
-
-    def test_to_dict(self, sample_keys):
-        """
-        Test for the ``to_dict`` method.
-        """
-        default_result = {
-            "bar": {
-                "baz": 1,
-            },
-            "quuz": 1,
-            "grault": 2,
-            "garply": 3,
+        config = sample_config({"foo": 1, "bar": {"baz": 2}, "quuz": {"corge": False}})
+        expected_attrs = {
+            **sample_config._expected_attrs,
+            "foo": 1,
+            "bar": sample_config.BarValue({"baz": 2}),
+            "quuz": sample_config.QuuzValue({"corge": False}),
         }
-        result = Config(sample_keys).to_dict()
-        assert result == default_result
+        for k, v in expected_attrs.items():
+            assert getattr(config, k) == v
 
-        result = Config(sample_keys).to_dict({"foo": False})
-        assert result == {**default_result, "foo": False}
-
-        result = Config(sample_keys).to_dict({"waldo": False})
-        assert result == {**default_result, "waldo": False}
-
-        result = Config(sample_keys).to_dict({"bar": {"quux": True}})
-        assert result == {**default_result, "bar": {**default_result["bar"], "quux": True}}
-
-        result = Config(sample_keys).to_dict({"grault": 3.14})
-        assert result == {**default_result, "grault": 3.14}
-
-        result = Config(sample_keys).to_dict({"grault": None})
-        assert result == {**default_result, "grault": None}
-
-        result = Config(sample_keys).to_dict({"garply": 3.14})
-        assert result == {**default_result, "garply": 3.14}
+        config.update_({"foo": 2, "bar": {"quux": 4}})
+        expected_attrs = {
+            **sample_config._expected_attrs,
+            "foo": 2,
+            "bar": sample_config.BarValue({"baz": 2, "quux": 4}),
+            "quuz": sample_config.QuuzValue({"corge": False}),
+        }
+        for k, v in expected_attrs.items():
+            assert getattr(config, k) == v 
 
         # test errors
         with pytest.raises(TypeError):
-            Config(sample_keys).to_dict({"grault": "bazly"})
+            sample_config(1)
 
         with pytest.raises(TypeError):
-            Config(sample_keys).to_dict({"garply": None})
+            sample_config({1: 2})
+
+        sample_config.foo = mock.MagicMock(spec=Key)
+        sample_config.foo.get_value.side_effect = TypeError("bad value")
+        with pytest.raises(TypeError, match=r".*key 'foo': bad value"):
+            sample_config({"foo": 1})
+
+        sample_config.foo.get_value.side_effect = ValueError("bad value")
+        with pytest.raises(ValueError, match=r".*key 'foo': bad value"):
+            sample_config({"foo": 1})
+
+        with pytest.raises(ValueError, match=r".*key 'foo': bad value"):
+            config.update_({"foo": 1})
+
+    def test___eq__(self, sample_config):
+        """
+        Tests for the ``__eq__`` method.
+        """
+        assert sample_config() == sample_config()
+        assert sample_config({"bar": {"quux": 2}}) == sample_config({"bar": {"quux": 2}})
+        assert sample_config({"bar": {"quux": 2}}) != sample_config({"bar": {"quux": 3}})
+        
+        class OtherConfig(Config):
+            pass
+
+        assert sample_config() != OtherConfig()
+
+    def test___getitem__(self, sample_config):
+        """
+        Tests for the ``__getitem__`` method.
+        """
+        config = sample_config()
+        with mock.patch("fica.config.getattr") as mocked_getattr:
+            config["foo"]
+            mocked_getattr.assert_called_with(config, "foo")
+
+    def test___repr__(self, sample_config):
+        """
+        Tests for the ``__repr__`` method.
+        """
+        config = sample_config()
+        assert repr(config) == \
+            "SampleConfig(bar=BarValue(baz=1, quux=None), foo=None, garply=3, grault=2, quuz=1)"

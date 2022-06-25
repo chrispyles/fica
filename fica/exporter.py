@@ -4,9 +4,10 @@ import json
 import yaml
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Type
 
 from .config import Config
+from .key import Key
 
 
 class ConfigExporter(ABC):
@@ -14,6 +15,41 @@ class ConfigExporter(ABC):
     An abstract base class that converts a :py:class:`fica.Config` object into a documentation
     string.
     """
+
+    @classmethod
+    def recursively_populate_config_dict(cls, instc: Config, d: Dict[str, Any]) -> None:
+        """
+        Populate a dictionary with the values for each key in the provided :py:class:`fica.Config`
+        instance, recursing into nested :py:class:`fica.Config` objects.
+
+        Args:
+            instc (:py:class:`fica.Config`): an instance of a :py:class:`fica.Config` subclass
+            d (``dict[str, object]``): the dictionary to populate with the default values
+        """
+        for k in instc._get_keys_():
+            v = getattr(instc, k)
+            if isinstance(v, Config):
+                subd = {}
+                cls.recursively_populate_config_dict(v, subd)
+                v = subd
+            d[k] = v
+
+    @classmethod
+    def config_to_dict(cls, config: Type[Config]) -> Dict[str, Any]:
+        """
+        Create a dictionary mapping each key name to its default value (or a dictionary of default
+        values in the case of subkeys) for the provided :py:class:`fica.Config` subclass.
+
+        Args:
+            config (``type[Config]``): the :py:class:`fica.Config` subclass
+
+        Returns:
+            ``dict[str, Any]``: the generated dictionary
+        """
+        instc = config()
+        d = {}
+        cls.recursively_populate_config_dict(instc, d)
+        return d
 
     @property
     @abstractmethod
@@ -23,7 +59,7 @@ class ConfigExporter(ABC):
         """
         raise NotImplementedError()
 
-    def get_descriptions(self, config: Config, config_dict: Dict[str, Any]) -> List[str]:
+    def get_descriptions(self, config: Type[Config], config_dict: Dict[str, Any]) -> List[str]:
         """
         Get a list of description strings for each configuration in ``config_dict``.
 
@@ -39,12 +75,12 @@ class ConfigExporter(ABC):
         """
         descriptions = []
         for k in config_dict:
-            key = config.get_key(k)
+            key: Key = getattr(config, k)
             descriptions.append(key.get_description())
 
-            subkey_config = key.get_subkeys_as_config()
-            if subkey_config is not None:
-                subkey_descriptions = self.get_descriptions(subkey_config, config_dict[k])
+            if key.should_document_subkeys():
+                subkey_descriptions = \
+                    self.get_descriptions(key.get_subkey_container(), config_dict[k])
                 descriptions.extend(subkey_descriptions)
 
         return descriptions
@@ -91,9 +127,9 @@ class ConfigExporter(ABC):
         return True
 
     @abstractmethod
-    def export(self, config: Config) -> str:
+    def export(self, config: Type[Config]) -> str:
         """
-        Export a :py:class:`fica.Config` object to a block of code with descriptions as comments.
+        Export a :py:class:`fica.Config` subclass to a block of code with descriptions as comments.
         """
         raise NotImplementedError()
 
@@ -108,8 +144,8 @@ class JsonExporter(ConfigExporter):
     def should_add_description(self, line: str) -> bool:
         return ":" in line
 
-    def export(self, config: Config) -> str:
-        config_dict = config.to_dict(include_empty=True)
+    def export(self, config: Type[Config]) -> str:
+        config_dict = self.config_to_dict(config)
         descriptions = self.get_descriptions(config, config_dict)
         conf_str = json.dumps(config_dict, indent=2)
         lines = conf_str.split("\n")
@@ -123,9 +159,9 @@ class YamlExporter(ConfigExporter):
     """
 
     comment_char = "#"
-    
-    def export(self, config: Config) -> str:
-        config_dict = config.to_dict(include_empty=True)
+
+    def export(self, config: Type[Config]) -> str:
+        config_dict = self.config_to_dict(config)
         descriptions = self.get_descriptions(config, config_dict)
         conf_str = yaml.dump(config_dict, indent=2, sort_keys=False).strip()
         return "\n".join(self.add_descriptions(conf_str.split("\n"), descriptions))

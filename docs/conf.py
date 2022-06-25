@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'fica documentation'
+project = 'fica'
 copyright = '2022, Christopher Pyles'
 author = 'Christopher Pyles'
 
