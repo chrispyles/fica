@@ -46,7 +46,7 @@ class ConfigExporter(ABC):
         Returns:
             ``dict[str, Any]``: the generated dictionary
         """
-        instc = config()
+        instc = config(documentation_mode=True)
         d = {}
         cls.recursively_populate_config_dict(instc, d)
         return d
