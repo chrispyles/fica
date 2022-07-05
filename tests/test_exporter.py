@@ -7,6 +7,16 @@ from textwrap import dedent
 from fica.exporter import create_exporter, JsonExporter, YamlExporter
 
 
+def test_that_sample_config_raise_if_not_in_doc_mode_works(sample_config):
+    """
+    Tests that the class returned by the ``sample_config`` fixture raises an error when it is not
+    instantiated in documentation mode if indicated.
+    """
+    sample_config.raise_if_not_in_doc_mode = True
+    with pytest.raises(RuntimeError):
+        sample_config()
+
+
 class TestJsonExporter:
     """
     Tests for ``fica.exporter.JsonExporter``.
@@ -16,6 +26,7 @@ class TestJsonExporter:
         """
         Test for the ``export`` method.
         """
+        sample_config.raise_if_not_in_doc_mode = True
         exported_config = JsonExporter().export(sample_config)
         assert exported_config == dedent("""\
             {
@@ -40,6 +51,7 @@ class TestYamlExporter:
         """
         Test for the ``export`` method.
         """
+        sample_config.raise_if_not_in_doc_mode = True
         exported_config = YamlExporter().export(sample_config)
         assert exported_config == dedent("""\
             foo: null     # foo
