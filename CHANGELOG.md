@@ -3,6 +3,7 @@
 ## v0.1.1 - Unreleased
 
 * Fixed `fica.Config` to maintain the order keys are declared in
+* Added the `documentation_mode` argument to `fica.Config`
 
 ## v0.1.0 - 2022-07-25
 
