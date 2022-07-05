@@ -11,6 +11,8 @@ def sample_config() -> Config:
     A pytest fixture for generating a sample ``Config`` object.
     """
     class SampleConfig(Config):
+
+        raise_if_not_in_doc_mode = False
         
         foo = Key(description="foo")
         
@@ -47,5 +49,11 @@ def sample_config() -> Config:
             "grault": 2,
             "garply": 3,
         }
+
+        def __init__(self, *args, documentation_mode: bool = False, **kwargs) -> None:
+            if type(self).raise_if_not_in_doc_mode and not documentation_mode:
+                raise RuntimeError("not in documentation mode!")
+
+            super().__init__(*args, documentation_mode=documentation_mode, **kwargs)
 
     return SampleConfig

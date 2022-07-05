@@ -147,6 +147,29 @@ with ``baz`` set to ``False`` and ``quux`` set to ``1`` (its default).
     MyConfig({"bar": {"baz": False}}) # results in foo=None, bar={baz=False, quux=1}
     MyConfig("foo": False, "bar": 3}) # results in foo=False, bar=3
 
+Note that the default constructor for :py:class:`fica.Config` has a ``documentation_mode`` argument
+that defaults to ``False``. When ``fica`` creates an instance of this config class to document its
+configurations, it will set this argument to ``True``; this can be useful for cases in which you
+override the default constructor to perform validations or set other values before initializing the
+config. The example below demonstrates the use of this argument.
+
+.. code-block:: python
+
+    class MyConfig(fica.Config):
+
+        foo = fica.Key(description="an even number", type_=int)
+
+        def __init__(self, user_config, documentation_mode=False):
+            if not documentation_mode:
+                if foo % 2 != 0:
+                    raise ValueError("foo is odd!")
+
+            super().__init__(user_config, documentation_mode=documentation_mode)
+
+(Note that it is possible to achieve the same effect as in this example with validators, which is
+the preferred method for doing so, but we did it this way here to illustrate the use of the
+``documentation_mode`` argument.)
+
 Once you have instantiated the config class, accessing the values of each field is the same as any
 attribute access in Python. Fields that have subkey containers (and aren't defaulted/overridden to a
 value other than an instance of a config class) are mapped to instances of their subkey container
