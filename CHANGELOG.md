@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.1 - Unreleased
+
+* Fixed `fica.Config` to maintain the order keys are declared in
+
 ## v0.1.0 - 2022-07-25
 
 * Convert to object-oriented model of configuration definition
