@@ -97,7 +97,10 @@ class Config:
             ``list[str]``: the attribute names of all keys
         """
         cls = type(self)
-        return [a for a in dir(cls) if isinstance(getattr(cls, a), Key)]
+
+        # iterate through cls.__dict__ because dicts maintain insertion order, and will therefore be
+        # ordered in the same order as the fields were declared
+        return [a for a in cls.__dict__ if isinstance(getattr(cls, a), Key)]
 
     def __eq__(self, other: Any) -> bool:
         """
