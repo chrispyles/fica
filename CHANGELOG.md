@@ -1,6 +1,11 @@
 # Changelog
 
-## v0.1.0 - 2022-07-25
+## v0.1.1 - 2022-07-05
+
+* Fixed `fica.Config` to maintain the order keys are declared in
+* Added the `documentation_mode` argument to `fica.Config`
+
+## v0.1.0 - 2022-06-25
 
 * Convert to object-oriented model of configuration definition
 * Added validation tools for user-specified values for keys per [#5](https://github.com/chrispyles/fica/issues/5)

@@ -16,9 +16,15 @@ class Config:
 
             foo = fica.Key(description="a value for foo")
 
+    When ``fica`` creates an instance of your config to document it, it will set
+    ``documentation_mode`` to ``True``; this can be useful for disabling any validations in your
+    subclass's constructor when fica documents it.
+
     Args:
         user_config (``dict[str, object]``): a dictionary containing the configurations specified
             by the user
+        documentation_mode (``bool``): indicates that ``fica`` is creating an instance with an empty
+            user config to generate the documentation.
     """
 
     def _validate_user_config(self, user_config: Dict[str, Any]) -> None:
@@ -39,7 +45,7 @@ class Config:
             raise TypeError(
                 "Some keys of the user-specified configurations dictionary are not strings")
 
-    def __init__(self, user_config: Dict[str, Any] = {}) -> None:
+    def __init__(self, user_config: Dict[str, Any] = {}, documentation_mode: bool = False) -> None:
         self._validate_user_config(user_config)
 
         cls, all_keys = type(self), self._get_keys_()
@@ -97,7 +103,10 @@ class Config:
             ``list[str]``: the attribute names of all keys
         """
         cls = type(self)
-        return [a for a in dir(cls) if isinstance(getattr(cls, a), Key)]
+
+        # iterate through cls.__dict__ because dicts maintain insertion order, and will therefore be
+        # ordered in the same order as the fields were declared
+        return [a for a in cls.__dict__ if isinstance(getattr(cls, a), Key)]
 
     def __eq__(self, other: Any) -> bool:
         """

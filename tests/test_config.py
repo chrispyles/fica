@@ -87,4 +87,4 @@ class TestConfig:
         """
         config = sample_config()
         assert repr(config) == \
-            "SampleConfig(bar=BarValue(baz=1, quux=None), foo=None, garply=3, grault=2, quuz=1)"
+            "SampleConfig(foo=None, bar=BarValue(baz=1, quux=None), quuz=1, grault=2, garply=3)"
