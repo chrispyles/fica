@@ -12,9 +12,9 @@ class TestConfig:
     Tests for ``fica.config.Config``.
     """
 
-    def test_constructor_and_update_(self, sample_config):
+    def test_constructor_and_update(self, sample_config):
         """
-        Tests for the ``Config`` constructor and the ``update_`` method.
+        Tests for the ``Config`` constructor and the ``update`` method.
         """
         config = sample_config()
         for k, v in sample_config._expected_attrs.items():
@@ -30,7 +30,7 @@ class TestConfig:
         for k, v in expected_attrs.items():
             assert getattr(config, k) == v
 
-        config.update_({"foo": 2, "bar": {"quux": 4}})
+        config.update({"foo": 2, "bar": {"quux": 4}})
         expected_attrs = {
             **sample_config._expected_attrs,
             "foo": 2,
@@ -48,6 +48,7 @@ class TestConfig:
             sample_config({1: 2})
 
         sample_config.foo = mock.MagicMock(spec=Key)
+        sample_config.foo.get_name.return_value = "foo"
         sample_config.foo.get_value.side_effect = TypeError("bad value")
         with pytest.raises(TypeError, match=r".*key 'foo': bad value"):
             sample_config({"foo": 1})
@@ -57,7 +58,7 @@ class TestConfig:
             sample_config({"foo": 1})
 
         with pytest.raises(ValueError, match=r".*key 'foo': bad value"):
-            config.update_({"foo": 1})
+            config.update({"foo": 1})
 
     def test___eq__(self, sample_config):
         """
@@ -89,13 +90,13 @@ class TestConfig:
         assert repr(config) == \
             "SampleConfig(foo=None, bar=BarValue(baz=1, quux=None), quuz=1, grault=2, garply=3)"
 
-    def test_get_user_config_(self, sample_config):
+    def test_get_user_config(self, sample_config):
         """
-        Tests for the ``get_user_config_`` method.
+        Tests for the ``get_user_config`` method.
         """
         def test_with_user_config(user_config):
             config = sample_config(user_config)
-            assert config.get_user_config_() == user_config
+            assert config.get_user_config() == user_config
 
         test_with_user_config({})
         test_with_user_config({"foo": True, "bar": {"baz": 2}})

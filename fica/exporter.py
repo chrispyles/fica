@@ -26,13 +26,13 @@ class ConfigExporter(ABC):
             instc (:py:class:`fica.Config`): an instance of a :py:class:`fica.Config` subclass
             d (``dict[str, object]``): the dictionary to populate with the default values
         """
-        for k in instc._get_keys_():
-            v = getattr(instc, k)
+        for n, a in instc._get_names_to_attrs().items():
+            v = getattr(instc, a)
             if isinstance(v, Config):
                 subd = {}
                 cls.recursively_populate_config_dict(v, subd)
                 v = subd
-            d[k] = v
+            d[n] = v
 
     @classmethod
     def config_to_dict(cls, config: Type[Config]) -> Dict[str, Any]:

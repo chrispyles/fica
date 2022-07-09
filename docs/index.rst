@@ -224,7 +224,7 @@ a dictionary that contains values for the fields of the subkey container.
     my_config.bar.baz                             # returns False
 
 To update the values in a :py:class:`fica.Config` object after it has been instantiated, use the
-:py:meth:`update_<fica.Config.update_>` method (note the trailing ``_``):
+:py:meth:`update<fica.Config.update>` method:
 
 .. code-block:: python
 
@@ -241,7 +241,7 @@ To update the values in a :py:class:`fica.Config` object after it has been insta
         bar = fica.Key(description="a value for bar", subkey_container=BarValue)
 
     my_config = MyConfig()
-    my_config.update_({"bar": {"quux": 2}})
+    my_config.update({"bar": {"quux": 2}})
     my_config.bar.baz                       # returns True
     my_config.bar.quux                      # returns 2
 
