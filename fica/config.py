@@ -131,5 +131,25 @@ class Config:
         ret = ret[:-2] + ")"
         return ret
 
+    def get_user_config_(self) -> Dict[str, Any]:
+        """
+        Get a user configuration ``dict`` that could be used to re-create this config exactly.
+
+        Returns a ``dict`` mapping keys to their values in this config if the value of the key is
+        different from its default.
+
+        Returns:
+            ``dict[str, object]``: the user configurations ``dict``
+        """
+        cls = type(self)
+        user_config = {}
+        for k in self._get_keys_():
+            v = getattr(self, k)
+            if v != getattr(cls, k).get_value():
+                if isinstance(v, Config):
+                    v = v.get_user_config_()
+                user_config[k] = v
+        return user_config
+
 
 from .key import Key

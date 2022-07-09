@@ -88,3 +88,16 @@ class TestConfig:
         config = sample_config()
         assert repr(config) == \
             "SampleConfig(foo=None, bar=BarValue(baz=1, quux=None), quuz=1, grault=2, garply=3)"
+
+    def test_get_user_config_(self, sample_config):
+        """
+        Tests for the ``get_user_config_`` method.
+        """
+        def test_with_user_config(user_config):
+            config = sample_config(user_config)
+            assert config.get_user_config_() == user_config
+
+        test_with_user_config({})
+        test_with_user_config({"foo": True, "bar": {"baz": 2}})
+        test_with_user_config({"quuz": {"corge": False}, "bar": 3})
+        test_with_user_config({"grault": None})
