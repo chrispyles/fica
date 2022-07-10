@@ -147,6 +147,23 @@ with ``baz`` set to ``False`` and ``quux`` set to ``1`` (its default).
     MyConfig({"bar": {"baz": False}}) # results in foo=None, bar={baz=False, quux=1}
     MyConfig("foo": False, "bar": 3}) # results in foo=False, bar=3
 
+By default, ``fica`` assumes that the name of a key in the user-specified configuration is the same
+as the name of the attribute in the :py:class:`fica.Config` subclass (e.g., in the example above,
+a user-specified value with key ``foo`` maps to the ``foo`` attribute of ``MyConfig``). To specify
+a different name from the attribute name, add the ``name`` argument to the :py:class:`fica.Key`
+constructor; when this value is provided, ``fica`` ignores the name of the attribute in the config
+class and instead looks for a key with the specified name in the user config. This behavior can be
+useful for allowing key names that collide with the names of methods offered by the
+:py:class:`fica.Config` class.
+
+.. code-block:: python
+
+    class MyConfig(fica.Config):
+
+        foo = fica.Key(name="bar")
+
+    MyConfig({"bar": 2}) # results in foo=2
+
 Note that the default constructor for :py:class:`fica.Config` has a ``documentation_mode`` argument
 that defaults to ``False``. When ``fica`` creates an instance of this config class to document its
 configurations, it will set this argument to ``True``; this can be useful for cases in which you
@@ -244,6 +261,22 @@ To update the values in a :py:class:`fica.Config` object after it has been insta
     my_config.update({"bar": {"quux": 2}})
     my_config.bar.baz                       # returns True
     my_config.bar.quux                      # returns 2
+
+:py:class:`fica.Config` also provides a method :py:meth:`fica.Config.get_user_config` for generating
+a dictionary that could be passed to the config class constructor to re-create the config. The
+returned dictionary contains all keys that are mapped to values other than their defaults, recursing
+into keys with subkeys. This can be useful for serializing configuration objects to be reloaded
+later.
+
+.. code-block:: python
+
+    # continuing with MyConfig from the last example
+    >>> my_config = MyConfig({"foo": 1, "bar": {"quux": 2}})
+    >>> my_config.get_user_config()
+    ... {"foo": 1, "bar": {"quux": 2}}
+    >>> my_config = MyConfig({"foo": 1, "bar": False})
+    >>> my_config.get_user_config()
+    ... {"foo": 1, "bar": False}
 
 
 .. _documenting:
