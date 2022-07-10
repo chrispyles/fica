@@ -23,6 +23,7 @@ def default_key_attrs():
         "validator": None,
         "subkey_container": None,
         "enforce_subkeys": False,
+        "name": None,
     }
 
 
@@ -90,6 +91,9 @@ class TestKey:
             "default": SUBKEYS,
             "enforce_subkeys": True,
         })
+
+        key = Key(name="foo")
+        assert_object_attrs(key, {**default_key_attrs, "name": "foo"})
 
         # test errors
         with pytest.raises(TypeError):
@@ -202,3 +206,13 @@ class TestKey:
 
         key = Key()
         assert key.should_document_subkeys() is False
+
+    def test_get_name(self):
+        """
+        Test for the ``get_name`` method.
+        """
+        key = Key()
+        assert key.get_name("foo") == "foo"
+
+        key = Key(name="bar")
+        assert key.get_name("foo") == "bar"
