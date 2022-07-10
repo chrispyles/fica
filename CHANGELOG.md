@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.0 - Unreleased
+
+* Added the `name` argument to `fica.Key`
+* Added `fica.Config.get_user_config` per [#19](https://github.com/chrispyles/fica/issues/19)
+* Renamed `fica.Config.update_` to `fica.Config.update`
+
 ## v0.1.1 - 2022-07-05
 
 * Fixed `fica.Config` to maintain the order keys are declared in
