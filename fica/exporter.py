@@ -4,7 +4,7 @@ import json
 import yaml
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Tuple, Type
 
 from .config import Config
 from .key import Key
@@ -17,7 +17,7 @@ class ConfigExporter(ABC):
     """
 
     @classmethod
-    def recursively_populate_config_dict(cls, instc: Config, d: Dict[str, Any]) -> None:
+    def recursively_populate_config_dict(cls, instc: Config, d: Dict[str, Tuple[str, Any]]) -> None:
         """
         Populate a dictionary with the values for each key in the provided :py:class:`fica.Config`
         instance, recursing into nested :py:class:`fica.Config` objects.
@@ -32,19 +32,20 @@ class ConfigExporter(ABC):
                 subd = {}
                 cls.recursively_populate_config_dict(v, subd)
                 v = subd
-            d[n] = v
+            d[a] = (n, v)
 
     @classmethod
-    def config_to_dict(cls, config: Type[Config]) -> Dict[str, Any]:
+    def config_to_dict(cls, config: Type[Config]) -> Dict[str, Tuple[str, Any]]:
         """
-        Create a dictionary mapping each key name to its default value (or a dictionary of default
-        values in the case of subkeys) for the provided :py:class:`fica.Config` subclass.
+        Create a dictionary mapping each key attribute name to a tuple containing its name in the
+        user config and its default value (or a dictionary of default values in the case of subkeys)
+        for the provided :py:class:`fica.Config` subclass.
 
         Args:
             config (``type[Config]``): the :py:class:`fica.Config` subclass
 
         Returns:
-            ``dict[str, Any]``: the generated dictionary
+            ``dict[str, tuple[str, object]]``: the generated dictionary
         """
         instc = config(documentation_mode=True)
         d = {}
@@ -59,7 +60,8 @@ class ConfigExporter(ABC):
         """
         raise NotImplementedError()
 
-    def get_descriptions(self, config: Type[Config], config_dict: Dict[str, Any]) -> List[str]:
+    def get_descriptions(self, config: Type[Config], config_dict: Dict[str, Tuple[str, Any]]) -> \
+            List[str]:
         """
         Get a list of description strings for each configuration in ``config_dict``.
 
@@ -68,19 +70,20 @@ class ConfigExporter(ABC):
 
         Args:
             config (:py:class:`fica.Config`): the config object being converted
-            config_dict (``dict[str: object]``): the dictionary of default configurations
+            config_dict (``dict[str, tuple[str, object]]``): the dictionary of default
+                configurations
 
         Returns:
             ``list[str]``: the list of descriptions for each key and subkey in ``config_dict``
         """
         descriptions = []
-        for k in config_dict:
-            key: Key = getattr(config, k)
+        for a, (_, v) in config_dict.items():
+            key: Key = getattr(config, a)
             descriptions.append(key.get_description())
 
             if key.should_document_subkeys():
                 subkey_descriptions = \
-                    self.get_descriptions(key.get_subkey_container(), config_dict[k])
+                    self.get_descriptions(key.get_subkey_container(), v)
                 descriptions.extend(subkey_descriptions)
 
         return descriptions
@@ -133,6 +136,14 @@ class ConfigExporter(ABC):
         """
         raise NotImplementedError()
 
+    @classmethod
+    def config_dict_to_user_config(cls, config_dict: Dict[str, Tuple[str, Any]]) -> Dict[str, Any]:
+        """
+        Convert ``config_dict`` to a valid user config.
+        """
+        return {n: (cls.config_dict_to_user_config(v) if isinstance(v, dict) else v) for _, (n, v) \
+            in config_dict.items()}
+
 
 class JsonExporter(ConfigExporter):
     """
@@ -147,7 +158,7 @@ class JsonExporter(ConfigExporter):
     def export(self, config: Type[Config]) -> str:
         config_dict = self.config_to_dict(config)
         descriptions = self.get_descriptions(config, config_dict)
-        conf_str = json.dumps(config_dict, indent=2)
+        conf_str = json.dumps(self.config_dict_to_user_config(config_dict), indent=2)
         lines = conf_str.split("\n")
         lines[1:-1] = self.add_descriptions(lines[1:-1], descriptions)
         return "\n".join(lines)
@@ -163,7 +174,11 @@ class YamlExporter(ConfigExporter):
     def export(self, config: Type[Config]) -> str:
         config_dict = self.config_to_dict(config)
         descriptions = self.get_descriptions(config, config_dict)
-        conf_str = yaml.dump(config_dict, indent=2, sort_keys=False).strip()
+        conf_str = yaml.dump(
+            self.config_dict_to_user_config(config_dict),
+            indent=2,
+            sort_keys=False,
+        ).strip()
         return "\n".join(self.add_descriptions(conf_str.split("\n"), descriptions))
 
 

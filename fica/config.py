@@ -49,7 +49,6 @@ class Config:
         self._validate_user_config(user_config)
 
         cls, names_to_attrs, seen_attrs = type(self), self._get_names_to_attrs(), set()
-        print(names_to_attrs)
         for k, v in user_config.items():
             if k in names_to_attrs:
                 try:
