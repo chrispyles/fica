@@ -40,7 +40,7 @@ def sample_config() -> Config:
 
         grault = Key(default=2, type_=(int, float), allow_none=True)
 
-        garply = Key(default=3, type_=(int, float))
+        garply = Key(default=3, type_=(int, float), name="garplish")
 
         _expected_attrs = {
             "foo": None,

@@ -53,6 +53,8 @@ class Key:
         subkey_container (subclass of :py:class:`fica.Config`): an (uninstantiated) config class
             containing the subkeys of this key
         enforce_subkeys (``bool``): whether to enforce the use of the subkey container if any
+        name (``str | None``): a name to look for in the user config (if different from the
+            attribute name on the :py:class:`fica.Config` object)
     """
 
     description: Optional[str]
@@ -76,6 +78,9 @@ class Key:
     enforce_subkeys: bool
     """whether to enforce the use of the subkey container if any"""
 
+    name: Optional[str]
+    """the name of this key in the user config (if different from the attribute name)"""
+
     def __init__(
         self,
         description: Optional[str] = None,
@@ -85,6 +90,7 @@ class Key:
         validator: Optional[_Validator] = None,
         subkey_container: Optional[Type[Config]] = None,
         enforce_subkeys: bool = False,
+        name: Optional[str] = None,
     ) -> None:
         if type_ is not None:
             if not (isinstance(type_, Type) or (isinstance(type_, tuple) and \
@@ -120,6 +126,7 @@ class Key:
         self.validator = validator
         self.subkey_container = subkey_container
         self.enforce_subkeys = enforce_subkeys
+        self.name = name
 
     def get_description(self) -> Optional[str]:
         """
@@ -138,6 +145,19 @@ class Key:
             subclass of :py:class:`fica.Config`: the uninstantiated subkey container class
         """
         return self.subkey_container
+
+    def get_name(self, attr_name: str) -> str:
+        """
+        Determine the name of this key in the user configuration.
+
+        Args:
+            attr_name (``str``): the name of the attribute of this key in the
+                :py:class:`fica.Config` object
+
+        Returns:
+            ``str``: the name of the key
+        """
+        return self.name if self.name is not None else attr_name
 
     def get_value(self, user_value: Any = EMPTY) -> Any:
         """

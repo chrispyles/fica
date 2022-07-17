@@ -37,7 +37,7 @@ class TestJsonExporter:
               },
               "quuz": 1,
               "grault": 2,
-              "garply": 3
+              "garplish": 3
             }
         """).strip()
 
@@ -60,7 +60,7 @@ class TestYamlExporter:
               quux: null
             quuz: 1
             grault: 2
-            garply: 3
+            garplish: 3
         """).strip()
 
 
