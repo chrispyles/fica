@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.0 - Unreleased
+## v0.2.0 - 2022-07-16
 
 * Added the `name` argument to `fica.Key`
 * Added `fica.Config.get_user_config` per [#19](https://github.com/chrispyles/fica/issues/19)
