@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1 - 2022-10-31
+
+* Fixed the repo URL in `setup.py`
+
 ## v0.2.0 - 2022-07-16
 
 * Added the `name` argument to `fica.Key`
