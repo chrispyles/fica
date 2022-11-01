@@ -20,7 +20,7 @@ setuptools.setup(
     description = "User configuration manager and documenter",
     long_description = long_description,
     long_description_content_type = "text/markdown",
-    url = "https://github.com/chrispyles/confit",
+    url = "https://github.com/chrispyles/fica",
     license = "MIT",
     packages = setuptools.find_packages(exclude=["tests"]),
     classifiers = [
