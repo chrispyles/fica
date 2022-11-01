@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.2 - 2022-10-31
+
+* Added `MANIFEST.in`
+
 ## v0.2.1 - 2022-10-31
 
 * Fixed the repo URL in `setup.py`
