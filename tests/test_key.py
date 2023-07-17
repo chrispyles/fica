@@ -95,6 +95,10 @@ class TestKey:
         key = Key(name="foo")
         assert_object_attrs(key, {**default_key_attrs, "name": "foo"})
 
+        factory = lambda: []
+        key = Key(factory=factory)
+        assert_object_attrs(key, {**default_key_attrs, "factory": factory})
+
         # test errors
         with pytest.raises(TypeError):
             Key(type_=[int])
@@ -122,6 +126,12 @@ class TestKey:
 
         with pytest.raises(ValueError):
             Key(enforce_subkeys=True)
+
+        with pytest.raises(ValueError):
+            Key(factory=factory, default=1)
+
+        with pytest.raises(ValueError):
+            Key(factory=factory, subkey_container=SubkeyValue)
 
     def test_get_value(self):
         """
@@ -179,6 +189,11 @@ class TestKey:
         with pytest.raises(ValueError, match=fr".*{mocked_validator.validate.return_value}.*"):
             validator_key.get_value(1)
             mocked_validator.validate.assert_called_with(1)
+
+        key = Key(factory=lambda: [])
+        v1, v2 = key.get_value(), key.get_value()
+        assert v1 == v2
+        assert v1 is not v2
 
         # test errors
         with pytest.raises(TypeError):

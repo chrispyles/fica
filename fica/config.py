@@ -1,6 +1,6 @@
 """Configuration objects"""
 
-from typing import Any, Dict
+from typing import Any, Dict, Set
 
 
 class Config:
@@ -27,6 +27,9 @@ class Config:
             user config to generate the documentation.
     """
 
+    _defaulted: Set[str]
+    """"""
+
     def _validate_user_config(self, user_config: Dict[str, Any]) -> None:
         """
         Validate that a dictionary containing user-specified configuration values has the correct
@@ -48,22 +51,28 @@ class Config:
     def __init__(self, user_config: Dict[str, Any] = {}, documentation_mode: bool = False) -> None:
         self._validate_user_config(user_config)
 
+        self._defaulted = set()
+
         cls, names_to_attrs, seen_attrs = type(self), self._get_names_to_attrs(), set()
-        for k, v in user_config.items():
-            if k in names_to_attrs:
+        for name, v in user_config.items():
+            if name in names_to_attrs:
                 try:
-                    value = getattr(cls, names_to_attrs[k]).get_value(v)
+                    key = getattr(cls, names_to_attrs[name])
+                    value = key.get_value(v)
+                    if key.use_default(v):
+                        self._defaulted.add(name)
                 except Exception as e:
                     # wrap the error message with one containing the key name
-                    raise type(e)(f"An error occurred while processing key '{k}': {e}")
+                    raise type(e)(f"An error occurred while processing key '{name}': {e}")
 
-                setattr(self, names_to_attrs[k], value)
-                seen_attrs.add(names_to_attrs[k])
+                setattr(self, names_to_attrs[name], value)
+                seen_attrs.add(names_to_attrs[name])
 
         # set values for unspecified keys
-        for k in self._get_attrs_to_names():
-            if k not in seen_attrs:
-                setattr(self, k, getattr(cls, k).get_value())
+        for attr, name in self._get_attrs_to_names().items():
+            if attr not in seen_attrs:
+                setattr(self, attr, getattr(cls, attr).get_value())
+                self._defaulted.add(name)
 
     def update(self, user_config: Dict[str, Any]):
         """
@@ -79,19 +88,24 @@ class Config:
         self._validate_user_config(user_config)
 
         cls, names_to_attrs = type(self), self._get_names_to_attrs()
-        for k, v in user_config.items():
-            if k in names_to_attrs:
-                if isinstance(getattr(self, names_to_attrs[k]), Config) and isinstance(v, dict):
-                    getattr(self, names_to_attrs[k]).update(v)
+        for name, v in user_config.items():
+            if name in names_to_attrs:
+                if isinstance(getattr(self, names_to_attrs[name]), Config) and isinstance(v, dict):
+                    getattr(self, names_to_attrs[name]).update(v)
 
                 else:
+                    key = getattr(cls, names_to_attrs[name])
                     try:
-                        value = getattr(cls, names_to_attrs[k]).get_value(v)
+                        value = key.get_value(v)
                     except Exception as e:
                         # wrap the error message with one containing the key name
-                        raise type(e)(f"An error occurred while processing key '{k}': {e}")
+                        raise type(e)(f"An error occurred while processing key '{name}': {e}")
 
-                    setattr(self, names_to_attrs[k], value)
+                    setattr(self, names_to_attrs[name], value)
+                    if key.use_default(v):
+                        self._defaulted.add(name)
+                    elif name in self._defaulted:
+                        self._defaulted.remove(name)
 
     def _get_attrs_to_names(self) -> Dict[str, str]:
         """
@@ -143,14 +157,15 @@ class Config:
         Returns:
             ``dict[str, object]``: the user configurations ``dict``
         """
-        cls = type(self)
         attrs_to_names = self._get_attrs_to_names()
         user_config = {}
         for a, n in attrs_to_names.items():
             v = getattr(self, a)
-            if v != getattr(cls, a).get_value():
-                if isinstance(v, Config):
-                    v = v.get_user_config()
+            if isinstance(v, Config):
+                v = v.get_user_config()
+                if len(v) > 0:
+                    user_config[n] = v
+            elif n not in self._defaulted:
                 user_config[n] = v
         return user_config
 

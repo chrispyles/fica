@@ -1,6 +1,6 @@
 """Configuration keys"""
 
-from typing import Any, Optional, Tuple, Type, Union
+from typing import Any, Callable, Optional, Tuple, Type, Union
 
 from .config import Config
 from .validators import _Validator
@@ -44,6 +44,10 @@ class Key:
     If ``default`` is :py:data:`fica.EMPTY` and subkeys are provided, ``default`` is
     automatically set to :py:data:`fica.SUBKEYS`.
 
+    To create a new default value for each key value, pass a 0-argument function to ``factory``.
+    This function will be called each time a :py:class:`fica.Config` is created to set the value of
+    the key if no value is specified by the user.
+
     Args:
         description (``str | None``): a description of the configuration for documentation
         default (``object``): the default value of the key
@@ -55,6 +59,7 @@ class Key:
         enforce_subkeys (``bool``): whether to enforce the use of the subkey container if any
         name (``str | None``): a name to look for in the user config (if different from the
             attribute name on the :py:class:`fica.Config` object)
+        factory (``callable[[], object] | None``): a factory used to create the default value of the key
     """
 
     description: Optional[str]
@@ -81,6 +86,9 @@ class Key:
     name: Optional[str]
     """the name of this key in the user config (if different from the attribute name)"""
 
+    factory: Optional[Callable[[], Any]]
+    """a factory used to create the default value"""
+
     def __init__(
         self,
         description: Optional[str] = None,
@@ -91,6 +99,7 @@ class Key:
         subkey_container: Optional[Type[Config]] = None,
         enforce_subkeys: bool = False,
         name: Optional[str] = None,
+        factory: Optional[Callable[[], Any]] = None,
     ) -> None:
         if type_ is not None:
             if not (isinstance(type_, Type) or (isinstance(type_, tuple) and \
@@ -119,6 +128,9 @@ class Key:
         if enforce_subkeys and subkey_container is None:
             raise ValueError("Cannot enforce subkeys when no subkey container is provided")
 
+        if factory is not None and (default is not None or subkey_container is not None):
+            raise ValueError("Cannot specify a factory with a default of subkey_container")
+
         self.description = description
         self.default = default
         self.type_ = type_
@@ -127,6 +139,7 @@ class Key:
         self.subkey_container = subkey_container
         self.enforce_subkeys = enforce_subkeys
         self.name = name
+        self.factory = factory
 
     def get_description(self) -> Optional[str]:
         """
@@ -159,6 +172,11 @@ class Key:
         """
         return self.name if self.name is not None else attr_name
 
+    def use_default(self, user_value: Any = EMPTY) -> bool:
+        """
+        """
+        return user_value is EMPTY
+
     def get_value(self, user_value: Any = EMPTY) -> Any:
         """
         Get the value of this key taking into account the value specified by the user, if any.
@@ -173,9 +191,12 @@ class Key:
             ``TypeError``: if the user-specified value is not of the correct type
             ``ValueError``: if the user-specified value fails validation
         """
-        if user_value is EMPTY:
+        if self.use_default(user_value):
             if self.default is SUBKEYS:
                 return self.subkey_container()
+
+            elif self.factory:
+                return self.factory()
 
             else:
                 return self.default

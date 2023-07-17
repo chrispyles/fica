@@ -98,7 +98,42 @@ class TestConfig:
             config = sample_config(user_config)
             assert config.get_user_config() == user_config
 
+            config = sample_config()
+            config.update(user_config)
+            assert config.get_user_config() == user_config
+
         test_with_user_config({})
         test_with_user_config({"foo": True, "bar": {"baz": 2}})
         test_with_user_config({"quuz": {"corge": False}, "bar": 3})
         test_with_user_config({"grault": None})
+
+    # Used in test_get_user_config_with_factories
+    counter = 0
+
+    def test_get_user_config_with_factories(self):
+        """
+        Tests for the ``get_user_config`` method with factories.
+        """
+        def bar_factory():
+            self.counter += 1
+            return self.counter
+
+        class SampleConfig(Config):
+            foo = Key(factory=lambda: [])
+            bar = Key(factory=bar_factory)
+
+        def test_with_user_config(user_config):
+            config = SampleConfig(user_config)
+            assert config.get_user_config() == user_config
+
+            config = SampleConfig()
+            config.update(user_config)
+            assert config.get_user_config() == user_config
+
+        test_with_user_config({})
+        test_with_user_config({"foo": [1], "bar": 10})
+        test_with_user_config({"foo": [], "bar": 3})
+
+        c = SampleConfig()
+        c.update({"foo": []})
+        assert c.get_user_config() == {"foo": []}

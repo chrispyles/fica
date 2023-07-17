@@ -32,7 +32,7 @@ Here's a simple configuration class:
 
 As shown above, you can provide a description for the key using the ``description`` argument and
 a default value using the ``default`` argument. If you don't provide a default value, ``fica`` will
-default the value to ``None``.
+set default the value to ``None``.
 
 For keys that have nested subconfigurations, you can define a nested :py:class:`fica.Config` class
 and pass this to the ``subkey_container`` argument. ``fica`` will handle instantiating and
@@ -56,6 +56,29 @@ If you provide a subkey container but do not specify a default value, ``fica`` a
 the default to the special value :py:obj:`fica.SUBKEYS`, a singleton object provided by
 ``fica`` that represents that a key's default value should be an instance of its subkey container
 class with its default values.
+
+
+Factories
++++++++++
+
+For cases in which a new instance of the default value must be generated each time the config is
+created, you can pass a zero-argument factory function to the ``factory`` argument to generate the
+value. This is very useful for creating keys for pass-by-reference types like lists and
+dictionaries or other stateful values:
+
+.. code-block:: python
+
+    fica.Key("foo", factory=lambda: [])
+
+    my_counter = 0
+    def my_factory():
+        global my_counter
+        my_counter += 1
+        return my_counter
+
+    fica.Key("bar", factory=my_factory)
+
+Note that the factory function is only called if the user does **not** specify a value for the key.
 
 
 Validating values
@@ -107,7 +130,7 @@ raised.
 
     fica.Key("foo", validator=is_even_validator)
 
-``fica`` checks the type of a value before calling any validators, so if you're using a validator in
+``fica`` checks the type of a value before calling any validators, so if you're using ``type_`` in
 conjunction with a validator, you can rely on the value passed to your validation function being of
 the correct type.
 
