@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.0 - Unreleased
+
+* Added the `factory` argument to `fica.Key` per [#21](https://github.com/chrispyles/fica/issues/21)
+
 ## v0.2.2 - 2022-10-31
 
 * Added `MANIFEST.in`
