@@ -26,6 +26,7 @@ jobs:
     - name: Run pytest
       run: |
         make testcov COVERAGE=$CONDA/bin/coverage
+        $CONDA/bin/coverage xml
 
     - uses: codecov/codecov-action@v3
       with:
