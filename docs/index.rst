@@ -32,7 +32,7 @@ Here's a simple configuration class:
 
 As shown above, you can provide a description for the key using the ``description`` argument and
 a default value using the ``default`` argument. If you don't provide a default value, ``fica`` will
-set default the value to ``None``.
+default the value to ``None``.
 
 For keys that have nested subconfigurations, you can define a nested :py:class:`fica.Config` class
 and pass this to the ``subkey_container`` argument. ``fica`` will handle instantiating and

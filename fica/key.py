@@ -174,6 +174,14 @@ class Key:
 
     def use_default(self, user_value: Any = EMPTY) -> bool:
         """
+        Determine whether the default value for this key will be used given the user-specified
+        value.
+
+        Args:
+            user_value (``object``): the value specified by the user
+
+        Returns:
+            ``bool``: whether the default value will be used
         """
         return user_value is EMPTY
 

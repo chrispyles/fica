@@ -28,7 +28,7 @@ class Config:
     """
 
     _defaulted: Set[str]
-    """"""
+    """the names of keys that were not specified by the user"""
 
     def _validate_user_config(self, user_config: Dict[str, Any]) -> None:
         """
