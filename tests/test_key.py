@@ -217,7 +217,7 @@ class TestKey:
         assert key.should_document_subkeys() is True
 
         key = Key(subkey_container=SubkeyValue, default=1)
-        assert key.should_document_subkeys() is False
+        assert key.should_document_subkeys() is True
 
         key = Key()
         assert key.should_document_subkeys() is False

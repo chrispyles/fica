@@ -4,10 +4,34 @@ import json
 import yaml
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple, Type
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from .config import Config
 from .key import Key
+
+
+def infer_indentation(l: str) -> str:
+    """
+    Infer the indentation of a string by returning all of its leading whitespace.
+    """
+    for i in range(1, len(l)):
+        if not l[:i].isspace():
+            return l[:i-1]
+    return l
+
+
+@dataclass
+class Description:
+    """
+    A container for a description line.
+    """
+
+    text: str
+    """the text of the description"""
+
+    is_default: Optional[bool] = None
+    """whether this line is the default value of a subkey container"""
 
 
 class ConfigExporter(ABC):
@@ -28,9 +52,10 @@ class ConfigExporter(ABC):
         """
         for n, a in instc._get_names_to_attrs().items():
             v = getattr(instc, a)
-            if isinstance(v, Config):
+            skc = getattr(type(instc), a).get_subkey_container()
+            if skc:
                 subd = {}
-                cls.recursively_populate_config_dict(v, subd)
+                cls.recursively_populate_config_dict(skc(documentation_mode=True), subd)
                 v = subd
             d[a] = (n, v)
 
@@ -61,7 +86,7 @@ class ConfigExporter(ABC):
         raise NotImplementedError()
 
     def get_descriptions(self, config: Type[Config], config_dict: Dict[str, Tuple[str, Any]]) -> \
-            List[str]:
+            List[Description]:
         """
         Get a list of description strings for each configuration in ``config_dict``.
 
@@ -74,12 +99,17 @@ class ConfigExporter(ABC):
                 configurations
 
         Returns:
-            ``list[str]``: the list of descriptions for each key and subkey in ``config_dict``
+            ``list[Description]``: the list of descriptions for each key and subkey in
+                ``config_dict``
         """
         descriptions = []
         for a, (_, v) in config_dict.items():
             key: Key = getattr(config, a)
-            descriptions.append(key.get_description())
+            descriptions.append(Description(key.get_description()))
+
+            default = key.get_default()
+            if key.get_subkey_container() and not isinstance(default, key.get_subkey_container()):
+                descriptions.append(Description(f"Default value: {self.export_primitive(default)}", is_default=True))
 
             if key.should_document_subkeys():
                 subkey_descriptions = \
@@ -88,7 +118,7 @@ class ConfigExporter(ABC):
 
         return descriptions
 
-    def add_descriptions(self, lines: List[str], descriptions: List[str]) -> List[str]:
+    def add_descriptions(self, lines: List[str], descriptions: List[Description]) -> List[str]:
         """
         Add descriptions to lines of configurations as comments.
 
@@ -97,7 +127,8 @@ class ConfigExporter(ABC):
 
         Args:
             lines (``list[str]``): the lines of code that descriptions should be added to
-            descriptions (``list[str]``): the list of descriptions for each line in ``lines``
+            descriptions (``list[Description]``): the list of descriptions for each line in
+                ``lines``
 
         Returns:
             ``list[str]``: a list of each line with its description appended
@@ -110,7 +141,12 @@ class ConfigExporter(ABC):
         for l in lines:
             if self.should_add_description(l):
                 d = next(iter_d)
-                l = concat_line(l, d)
+
+                while d.is_default:
+                    ret.append(infer_indentation(l) + self.comment_char + " " + d.text)
+                    d = next(iter_d)
+
+                l = concat_line(l, d.text)
 
             ret.append(l)
 
@@ -128,6 +164,13 @@ class ConfigExporter(ABC):
             ``bool``: whether a description should be appended to the line
         """
         return True
+
+    @abstractmethod
+    def export_primitive(self, value: Any) -> str:
+        """
+        Export a primitive value.
+        """
+        raise NotImplementedError()
 
     @abstractmethod
     def export(self, config: Type[Config]) -> str:
@@ -155,6 +198,9 @@ class JsonExporter(ConfigExporter):
     def should_add_description(self, line: str) -> bool:
         return ":" in line
 
+    def export_primitive(self, value: Any) -> str:
+        return json.dumps(value)
+
     def export(self, config: Type[Config]) -> str:
         config_dict = self.config_to_dict(config)
         descriptions = self.get_descriptions(config, config_dict)
@@ -170,6 +216,12 @@ class YamlExporter(ConfigExporter):
     """
 
     comment_char = "#"
+
+    def export_primitive(self, value: Any) -> str:
+        out = yaml.dump(value)
+        if out.endswith("\n...\n"):
+            out = out[:-5]
+        return out
 
     def export(self, config: Type[Config]) -> str:
         config_dict = self.config_to_dict(config)

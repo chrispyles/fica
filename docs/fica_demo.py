@@ -12,13 +12,11 @@ class Config(fica.Config):
 
     class BarValue(fica.Config):
 
-        baz: int = fica.Key(
-            default=1,
-        )
+        baz: int = fica.Key(default=1)
 
         qux: str = fica.Key(
             default="qux",
-            description="a value for qux"
+            description="a value for qux",
         )
 
     bar: BarValue = fica.Key(
@@ -26,6 +24,14 @@ class Config(fica.Config):
         subkey_container=BarValue,
     )
 
-    quuz: Optional[Any] = fica.Key(
-        description="a value for quuz",
+    quuz: Optional[Any] = fica.Key(description="a value for quuz")
+
+    class CorgeValue(fica.Config):
+
+        grault = fica.Key(description="a value for grault")
+
+    corge: CorgeValue = fica.Key(
+        description="a value for corge",
+        default=False,
+        subkey_container=CorgeValue,
     )

@@ -4,6 +4,7 @@ import pytest
 
 from textwrap import dedent
 
+from fica import Config, Key
 from fica.exporter import create_exporter, JsonExporter, YamlExporter
 
 
@@ -30,12 +31,15 @@ class TestJsonExporter:
         exported_config = JsonExporter().export(sample_config)
         assert exported_config == dedent("""\
             {
-              "foo": null,    // foo
-              "bar": {        // bar
-                "baz": 1,     // baz
+              "foo": null,     // foo
+              "bar": {         // bar
+                "baz": 1,      // baz
                 "quux": null
               },
-              "quuz": 1,
+              "quuz": {
+                // Default value: 1
+                "corge": true
+              },
               "grault": 2,
               "garplish": 3
             }
@@ -54,11 +58,13 @@ class TestYamlExporter:
         sample_config.raise_if_not_in_doc_mode = True
         exported_config = YamlExporter().export(sample_config)
         assert exported_config == dedent("""\
-            foo: null     # foo
-            bar:          # bar
-              baz: 1      # baz
+            foo: null      # foo
+            bar:           # bar
+              baz: 1       # baz
               quux: null
-            quuz: 1
+            quuz:
+              # Default value: 1
+              corge: true
             grault: 2
             garplish: 3
         """).strip()
