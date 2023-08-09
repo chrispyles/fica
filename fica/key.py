@@ -251,4 +251,4 @@ class Key:
         Returns:
             ``bool``: whether this class has subkeys that should be documented
         """
-        return self.subkey_container is not None and self.default is SUBKEYS
+        return self.subkey_container is not None

@@ -5,6 +5,7 @@
 * Added the `factory` argument to `fica.Key` per [#21](https://github.com/chrispyles/fica/issues/21)
 * Added user config key validation to `fica.Config` per [#12](https://github.com/chrispyles/fica/issues/12)
 * Added `fica.Key.get_default` per [#17](https://github.com/chrispyles/fica/issues/17)
+* Updated Sphinx extension to always show subkeys for keys with subkey containers and to show the default value in a comment at the top of the subkeys per [#25](https://github.com/chrispyles/fica/issues/25)
 
 ## v0.2.2 - 2022-10-31
 
