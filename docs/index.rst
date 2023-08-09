@@ -313,6 +313,16 @@ the ``fica`` directive, which uses Sphinx's code blocks to display the configura
 directive, pass the importable name of a :py:class:`fica.Config` subclass as the only argument to
 the directive.
 
+To use the ``fica`` Sphinx extension, add ``fica.sphinx`` to the ``extensions`` list in your Sphinx
+``conf.py`` file:
+
+.. code-block:: python
+
+    extensions = [
+        ...,
+        "fica.sphinx",
+    ]
+
 For example, say that we have the following in a file called ``fica_demo.py``:
 
 .. literalinclude:: fica_demo.py
