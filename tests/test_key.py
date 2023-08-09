@@ -231,3 +231,12 @@ class TestKey:
 
         key = Key(name="bar")
         assert key.get_name("foo") == "bar"
+
+    def test_get_default(self):
+        """
+        Test for the ``get_default`` method.
+        """
+        key = Key()
+        with mock.patch.object(key, "get_value") as mocked_get_value:
+            assert key.get_default() == mocked_get_value.return_value
+            mocked_get_value.assert_called_once_with()
