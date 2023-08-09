@@ -3,6 +3,7 @@
 ## v0.3.0 - Unreleased
 
 * Added the `factory` argument to `fica.Key` per [#21](https://github.com/chrispyles/fica/issues/21)
+* Added user config key validation to `fica.Config` per [#12](https://github.com/chrispyles/fica/issues/12)
 
 ## v0.2.2 - 2022-10-31
 
