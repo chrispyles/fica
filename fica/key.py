@@ -232,6 +232,18 @@ class Key:
 
             return user_value
 
+    def get_default(self) -> Any:
+        """
+        Get the default valu of this key.
+
+        If the default is a subkey container instance or a factory function, it is
+        re-instantiated/called, meaning that new instances/return values are returned for each call.
+
+        Returns:
+            ``object``: the default value of the key.
+        """
+        return self.get_value()
+
     def should_document_subkeys(self) -> bool:
         """
         Determine whether this key has subkeys that should be documented.
