@@ -285,6 +285,19 @@ To update the values in a :py:class:`fica.Config` object after it has been insta
     my_config.bar.baz                       # returns True
     my_config.bar.quux                      # returns 2
 
+By default, the provided user config dictionary can contain keys that are not present in the config
+class, and they are ignored. To validate that a user has not provided unexpected configs (e.g. to
+alert the user to typos), set ``require_valid_keys=True`` in the constructor. This setting is also
+applied to calls to ``update``.
+
+.. code-block:: python
+
+    # continuing with MyConfig from above
+    my_config = MyConfig({"baz": 1}, require_valid_keys=True)     # throws an error
+
+    my_config = MyConfig({"foo": 1}, require_valid_keys=True)     # no error
+    my_config.update({"baz": 1})                                  # throws an error
+
 :py:class:`fica.Config` also provides a method :py:meth:`fica.Config.get_user_config` for generating
 a dictionary that could be passed to the config class constructor to re-create the config. The
 returned dictionary contains all keys that are mapped to values other than their defaults, recursing

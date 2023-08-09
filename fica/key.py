@@ -185,12 +185,14 @@ class Key:
         """
         return user_value is EMPTY
 
-    def get_value(self, user_value: Any = EMPTY) -> Any:
+    def get_value(self, user_value: Any = EMPTY, require_valid_keys: bool = False) -> Any:
         """
         Get the value of this key taking into account the value specified by the user, if any.
 
         Args:
             user_value (``object``): the value specified by the user
+            require_valid_keys (``bool``): whether to require that all keys in the user config are
+                valid in the subkey container, if applicable
 
         Returns:
             ``object``: the value of the key, taking into account the user-specified value
@@ -201,7 +203,7 @@ class Key:
         """
         if self.use_default(user_value):
             if self.default is SUBKEYS:
-                return self.subkey_container()
+                return self.subkey_container(require_valid_keys=require_valid_keys)
 
             elif self.factory:
                 return self.factory()
@@ -223,7 +225,7 @@ class Key:
             # handle user-inputted dict w/ missing subkeys
             if self.subkey_container is not None:
                 if isinstance(user_value, dict):
-                    return self.subkey_container(user_value)
+                    return self.subkey_container(user_value, require_valid_keys=require_valid_keys)
 
                 elif self.enforce_subkeys:
                     raise ValueError("Cannot override subkeys for a key with enforced subkeys")

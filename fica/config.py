@@ -25,10 +25,14 @@ class Config:
             by the user
         documentation_mode (``bool``): indicates that ``fica`` is creating an instance with an empty
             user config to generate the documentation.
+        require_valid_keys (``bool``): whether to require that all keys in the user config are valid
     """
 
     _defaulted: Set[str]
     """the names of keys that were not specified by the user"""
+
+    _require_valid_keys: bool
+    """whether to require that all keys in the user config are valid"""
 
     def _validate_user_config(self, user_config: Dict[str, Any]) -> None:
         """
@@ -48,17 +52,23 @@ class Config:
             raise TypeError(
                 "Some keys of the user-specified configurations dictionary are not strings")
 
-    def __init__(self, user_config: Dict[str, Any] = {}, documentation_mode: bool = False) -> None:
+    def __init__(
+            self,
+            user_config: Dict[str, Any] = {},
+            documentation_mode: bool = False,
+            require_valid_keys: bool = False,
+        ) -> None:
         self._validate_user_config(user_config)
 
         self._defaulted = set()
+        self._require_valid_keys = require_valid_keys
 
         cls, names_to_attrs, seen_attrs = type(self), self._get_names_to_attrs(), set()
         for name, v in user_config.items():
             if name in names_to_attrs:
                 try:
                     key = getattr(cls, names_to_attrs[name])
-                    value = key.get_value(v)
+                    value = key.get_value(v, require_valid_keys=self._require_valid_keys)
                     if key.use_default(v):
                         self._defaulted.add(name)
                 except Exception as e:
@@ -67,6 +77,9 @@ class Config:
 
                 setattr(self, names_to_attrs[name], value)
                 seen_attrs.add(names_to_attrs[name])
+
+            elif self._require_valid_keys:
+                raise ValueError(f"Unexpected key found in config: '{name}'")
 
         # set values for unspecified keys
         for attr, name in self._get_attrs_to_names().items():
@@ -96,7 +109,7 @@ class Config:
                 else:
                     key = getattr(cls, names_to_attrs[name])
                     try:
-                        value = key.get_value(v)
+                        value = key.get_value(v, require_valid_keys=self._require_valid_keys)
                     except Exception as e:
                         # wrap the error message with one containing the key name
                         raise type(e)(f"An error occurred while processing key '{name}': {e}")
@@ -106,6 +119,9 @@ class Config:
                         self._defaulted.add(name)
                     elif name in self._defaulted:
                         self._defaulted.remove(name)
+
+            elif self._require_valid_keys:
+                raise ValueError(f"Unexpected key found in config: '{name}'")
 
     def _get_attrs_to_names(self) -> Dict[str, str]:
         """
