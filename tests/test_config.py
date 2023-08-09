@@ -38,7 +38,23 @@ class TestConfig:
             "quuz": sample_config.QuuzValue({"corge": False}),
         }
         for k, v in expected_attrs.items():
-            assert getattr(config, k) == v 
+            assert getattr(config, k) == v
+
+        config = sample_config({"foo": 1}, require_valid_keys=True)
+        expected_attrs = {
+            **sample_config._expected_attrs,
+            "foo": 1,
+        }
+        for k, v in expected_attrs.items():
+            assert getattr(config, k) == v
+
+        config.update({"foo": 2})
+        expected_attrs = {
+            **sample_config._expected_attrs,
+            "foo": 2,
+        }
+        for k, v in expected_attrs.items():
+            assert getattr(config, k) == v
 
         # test errors
         with pytest.raises(TypeError):
@@ -59,6 +75,21 @@ class TestConfig:
 
         with pytest.raises(ValueError, match=r".*key 'foo': bad value"):
             config.update({"foo": 1})
+
+        sample_config.foo.get_value.side_effect = None
+
+        with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
+            sample_config({"foo": 1, "doesnotexist": True}, require_valid_keys=True)
+
+        with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
+            sample_config({"quuz": {"doesnotexist": True}}, require_valid_keys=True)
+
+        config = sample_config({"foo": 1}, require_valid_keys=True)
+        with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
+            config.update({"foo": 1, "doesnotexist": True})
+
+        with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
+            config.update({"quuz": {"doesnotexist": True}})
 
     def test___eq__(self, sample_config):
         """
