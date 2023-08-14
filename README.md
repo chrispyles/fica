@@ -1,9 +1,13 @@
-# `fica`
+# `fica` 
 
 [![PyPI](https://img.shields.io/pypi/v/fica.svg)](https://pypi.org/project/fica/)
 [![Run tests](https://github.com/chrispyles/fica/actions/workflows/run-tests.yml/badge.svg)](https://github.com/chrispyles/fica/actions/workflows/run-tests.yml)
 [![codecov](https://codecov.io/gh/chrispyles/fica/branch/main/graph/badge.svg?token=67BKRAXF7T)](https://codecov.io/gh/chrispyles/fica)
 [![Documentation Status](https://readthedocs.org/projects/fica/badge/?version=latest)](https://fica.readthedocs.io/en/latest/?badge=latest)
+
+<p align="center">
+  <img src="images/logo.svg" />
+</p>
 
 `fica` is a Python library for managing and documenting the structure of user-specified
 configurations. With it, you can create dictionaries of configurations that contain default values
