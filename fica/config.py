@@ -2,6 +2,8 @@
 
 from typing import Any, Dict, Set
 
+from .utils import ConfigProcessingException
+
 
 class Config:
     """
@@ -73,7 +75,10 @@ class Config:
                         self._defaulted.add(name)
                 except Exception as e:
                     # wrap the error message with one containing the key name
-                    raise type(e)(f"An error occurred while processing key '{name}': {e}")
+                    if isinstance(e, ConfigProcessingException):
+                        raise ConfigProcessingException.from_child(name, e)
+                    else:
+                        raise ConfigProcessingException(name, e)
 
                 setattr(self, names_to_attrs[name], value)
                 seen_attrs.add(names_to_attrs[name])
@@ -112,7 +117,10 @@ class Config:
                         value = key.get_value(v, require_valid_keys=self._require_valid_keys)
                     except Exception as e:
                         # wrap the error message with one containing the key name
-                        raise type(e)(f"An error occurred while processing key '{name}': {e}")
+                        if isinstance(e, ConfigProcessingException):
+                            raise ConfigProcessingException.from_child(name, e)
+                        else:
+                            raise ConfigProcessingException(name, e)
 
                     setattr(self, names_to_attrs[name], value)
                     if key.use_default(v):
