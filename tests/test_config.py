@@ -4,7 +4,8 @@ import pytest
 
 from unittest import mock
 
-from fica import Config, Key
+from fica import Config, Key, validators
+from fica.utils import ConfigProcessingException
 
 
 class TestConfig:
@@ -66,14 +67,14 @@ class TestConfig:
         sample_config.foo = mock.MagicMock(spec=Key)
         sample_config.foo.get_name.return_value = "foo"
         sample_config.foo.get_value.side_effect = TypeError("bad value")
-        with pytest.raises(TypeError, match=r".*key 'foo': bad value"):
+        with pytest.raises(ConfigProcessingException, match=r".*foo: bad value"):
             sample_config({"foo": 1})
 
         sample_config.foo.get_value.side_effect = ValueError("bad value")
-        with pytest.raises(ValueError, match=r".*key 'foo': bad value"):
+        with pytest.raises(ConfigProcessingException, match=r".*foo: bad value"):
             sample_config({"foo": 1})
 
-        with pytest.raises(ValueError, match=r".*key 'foo': bad value"):
+        with pytest.raises(ConfigProcessingException, match=r".*foo: bad value"):
             config.update({"foo": 1})
 
         sample_config.foo.get_value.side_effect = None
@@ -81,15 +82,43 @@ class TestConfig:
         with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
             sample_config({"foo": 1, "doesnotexist": True}, require_valid_keys=True)
 
-        with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
+        with pytest.raises(
+            ConfigProcessingException,
+            match="An error occured while processing quuz: Unexpected key found in config: 'doesnotexist'",
+        ):
             sample_config({"quuz": {"doesnotexist": True}}, require_valid_keys=True)
 
         config = sample_config({"foo": 1}, require_valid_keys=True)
         with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
             config.update({"foo": 1, "doesnotexist": True})
 
-        with pytest.raises(ValueError, match="Unexpected key found in config: 'doesnotexist'"):
+        with pytest.raises(
+            ConfigProcessingException,
+            match="An error occured while processing quuz: Unexpected key found in config: 'doesnotexist'",
+        ):
             config.update({"quuz": {"doesnotexist": True}})
+
+        class DeeplyNestConfig(Config):
+            class AValue(Config):
+                class BValue(Config):
+                    c = Key(validator=validators.choice([1, 2]))
+                
+                b = Key(subkey_container=BValue)
+            
+            a = Key(subkey_container=AValue)
+        
+        with pytest.raises(
+            ConfigProcessingException,
+            match=r"An error occured while processing a\.b\.c: User-specified value failed validation: 3 is not one of \{1, 2\}",
+        ):
+            DeeplyNestConfig({"a": {"b": {"c": 3}}})
+        
+        c = DeeplyNestConfig({"a": {"b": {"c": 1}}})
+        with pytest.raises(
+            ConfigProcessingException,
+            match=r"An error occured while processing a\.b\.c: User-specified value failed validation: 3 is not one of \{1, 2\}",
+        ):
+            c.update({"a": {"b": {"c": 3}}})
 
     def test___eq__(self, sample_config):
         """
