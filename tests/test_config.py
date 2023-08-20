@@ -112,6 +112,13 @@ class TestConfig:
             match=r"An error occured while processing a\.b\.c: User-specified value failed validation: 3 is not one of \{1, 2\}",
         ):
             DeeplyNestConfig({"a": {"b": {"c": 3}}})
+        
+        c = DeeplyNestConfig({"a": {"b": {"c": 1}}})
+        with pytest.raises(
+            ConfigProcessingException,
+            match=r"An error occured while processing a\.b\.c: User-specified value failed validation: 3 is not one of \{1, 2\}",
+        ):
+            c.update({"a": {"b": {"c": 3}}})
 
     def test___eq__(self, sample_config):
         """

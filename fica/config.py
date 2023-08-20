@@ -108,25 +108,27 @@ class Config:
         cls, names_to_attrs = type(self), self._get_names_to_attrs()
         for name, v in user_config.items():
             if name in names_to_attrs:
-                if isinstance(getattr(self, names_to_attrs[name]), Config) and isinstance(v, dict):
-                    getattr(self, names_to_attrs[name]).update(v)
+                try:
+                    if isinstance(getattr(self, names_to_attrs[name]), Config) and \
+                            isinstance(v, dict):
+                        getattr(self, names_to_attrs[name]).update(v)
 
-                else:
-                    key = getattr(cls, names_to_attrs[name])
-                    try:
+                    else:
+                        key = getattr(cls, names_to_attrs[name])
                         value = key.get_value(v, require_valid_keys=self._require_valid_keys)
-                    except Exception as e:
-                        # wrap the error message with one containing the key name
-                        if isinstance(e, ConfigProcessingException):
-                            raise ConfigProcessingException.from_child(name, e)
-                        else:
-                            raise ConfigProcessingException(name, e)
 
-                    setattr(self, names_to_attrs[name], value)
-                    if key.use_default(v):
-                        self._defaulted.add(name)
-                    elif name in self._defaulted:
-                        self._defaulted.remove(name)
+                        setattr(self, names_to_attrs[name], value)
+                        if key.use_default(v):
+                            self._defaulted.add(name)
+                        elif name in self._defaulted:
+                            self._defaulted.remove(name)
+
+                except Exception as e:
+                    # wrap the error message with one containing the key name
+                    if isinstance(e, ConfigProcessingException):
+                        raise ConfigProcessingException.from_child(name, e)
+                    else:
+                        raise ConfigProcessingException(name, e)
 
             elif self._require_valid_keys:
                 raise ValueError(f"Unexpected key found in config: '{name}'")
