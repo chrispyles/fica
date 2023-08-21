@@ -92,6 +92,11 @@ class Config:
                 setattr(self, attr, getattr(cls, attr).get_value())
                 self._defaulted.add(name)
 
+    def __setattr__(self, attr: str, value: Any) -> None:
+        super().__setattr__(attr, value)
+        if attr in self._defaulted:
+            self._defaulted.remove(self._get_attrs_to_names()[attr])
+
     def update(self, user_config: Dict[str, Any]):
         """
         Recursively update the values for keys of this configuration in-place.

@@ -197,3 +197,16 @@ class TestConfig:
         c = SampleConfig()
         c.update({"foo": []})
         assert c.get_user_config() == {"foo": []}
+
+    def test_get_user_config_with_defaults(self):
+        """
+        Tests for the ``get_user_config`` method.
+        """
+        class C(Config):
+            foo = Key(default=2)
+
+        c = C()
+        assert c.get_user_config() == {}
+
+        c.foo = 3
+        assert c.get_user_config() == {"foo": 3}

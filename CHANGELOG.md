@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1 - 2023-08-20
+
+* Updated `fica.Config` to mark a key as not-defaulted when it is updated using `__setattr__`
+
 ## v0.3.0 - 2023-08-20
 
 * Added the `factory` argument to `fica.Key` per [#21](https://github.com/chrispyles/fica/issues/21)
