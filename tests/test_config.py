@@ -204,9 +204,13 @@ class TestConfig:
         """
         class C(Config):
             foo = Key(default=2)
+            bar = Key(name="baz", default=3)
 
         c = C()
         assert c.get_user_config() == {}
 
         c.foo = 3
         assert c.get_user_config() == {"foo": 3}
+
+        c.bar = 4
+        assert c.get_user_config() == {"foo": 3, "baz": 4}

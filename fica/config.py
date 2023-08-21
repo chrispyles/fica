@@ -94,7 +94,7 @@ class Config:
 
     def __setattr__(self, attr: str, value: Any) -> None:
         super().__setattr__(attr, value)
-        name = self._get_attrs_to_names()[attr]
+        name = self._get_attrs_to_names().get(attr)
         if name in self._defaulted:
             self._defaulted.remove(name)
 
