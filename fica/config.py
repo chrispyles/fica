@@ -94,8 +94,9 @@ class Config:
 
     def __setattr__(self, attr: str, value: Any) -> None:
         super().__setattr__(attr, value)
-        if attr in self._defaulted:
-            self._defaulted.remove(self._get_attrs_to_names()[attr])
+        name = self._get_attrs_to_names()[attr]
+        if name in self._defaulted:
+            self._defaulted.remove(name)
 
     def update(self, user_config: Dict[str, Any]):
         """
