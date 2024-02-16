@@ -99,6 +99,9 @@ class TestKey:
         key = Key(factory=factory)
         assert_object_attrs(key, {**default_key_attrs, "factory": factory})
 
+        key = Key(type_=list, factory=factory)
+        assert_object_attrs(key, {**default_key_attrs, "type_": list, "factory": factory})
+
         # test errors
         with pytest.raises(TypeError):
             Key(type_=[int])

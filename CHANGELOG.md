@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.0 - Unreleased
+
+* Updated `fica.Key` to assume that `factory` returns a value of the correct type if `type_` is specified per [#33](https://github.com/chrispyles/fica/issues/33)
+
 ## v0.3.1 - 2023-08-20
 
 * Updated `fica.Config` to mark a key as not-defaulted when it is updated using `__setattr__`

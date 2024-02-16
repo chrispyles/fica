@@ -106,8 +106,10 @@ class Key:
                     all(isinstance(e, Type) for e in type_))):
                 raise TypeError("type_ must be a single type or tuple of types")
 
+            # if factory is specified, assume it returns a value of the correct type
             if default is not SUBKEYS and \
-                    not (isinstance(default, type_) or (allow_none and default is None)):
+                    not (isinstance(default, type_) or (allow_none and default is None)) and \
+                    factory is None:
                 raise TypeError("The default value is not of the specified type(s)")
 
         if isinstance(default, dict):
