@@ -1,8 +1,7 @@
 """fica Sphinx extension"""
 
-import importlib
-
 from docutils.parsers.rst import directives
+from importlib import import_module
 from sphinx.directives.code import CodeBlock
 from sphinx.util.typing import OptionSpec
 
@@ -31,7 +30,7 @@ def import_and_get_config(object_path: str, exporter_type: str) -> str:
         ``str``: the code block contents documenting the configurations in the imported object
     """
     mod, cls = object_path.rsplit(".", 1)
-    module = importlib.import_module(mod)
+    module = import_module(mod)
     config_object = getattr(module, cls)
     return create_exporter(exporter_type).export(config_object)
 

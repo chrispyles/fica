@@ -22,7 +22,7 @@ def generate_export(config: Config, fmt: str) -> str:
 
 
 @mock.patch("fica.sphinx.create_exporter")
-@mock.patch("fica.sphinx.importlib.import_module")
+@mock.patch("fica.sphinx.import_module")
 def test_import_and_get_config(mocked_import_module, mocked_create_exporter, sample_config):
     """
     Test for ``fica.sphinx.import_and_get_config``.
