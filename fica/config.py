@@ -147,8 +147,12 @@ class Config:
 
         # iterate through cls.__dict__ because dicts maintain insertion order, and will therefore be
         # ordered in the same order as the fields were declared
-        return {a: getattr(cls, a).get_name(a) for a in cls.__dict__ \
-            if isinstance(getattr(cls, a), Key)}
+        return {
+            a: getattr(cls, a).get_name(a)
+            for a
+            in cls.__dict__
+            if isinstance(getattr(cls, a), Key)
+        }
 
     def _get_names_to_attrs(self) -> Dict[str, str]:
         """

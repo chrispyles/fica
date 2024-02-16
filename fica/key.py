@@ -59,7 +59,8 @@ class Key:
         enforce_subkeys (``bool``): whether to enforce the use of the subkey container if any
         name (``str | None``): a name to look for in the user config (if different from the
             attribute name on the :py:class:`fica.Config` object)
-        factory (``callable[[], object] | None``): a factory used to create the default value of the key
+        factory (``callable[[], object] | None``): a factory used to create the default value of the
+            key
     """
 
     description: Optional[str]
