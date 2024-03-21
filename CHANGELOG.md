@@ -3,6 +3,7 @@
 ## v0.4.0 - Unreleased
 
 * Updated `fica.Key` to assume that `factory` returns a value of the correct type if `type_` is specified per [#33](https://github.com/chrispyles/fica/issues/33)
+* Added the `required` argument to `fica.Key` per [#13](https://github.com/chrispyles/fica/issues/13)
 
 ## v0.3.1 - 2023-08-20
 
