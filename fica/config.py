@@ -89,7 +89,12 @@ class Config:
         # set values for unspecified keys
         for attr, name in self._get_attrs_to_names().items():
             if attr not in seen_attrs:
-                setattr(self, attr, getattr(cls, attr).get_value())
+                key = getattr(cls, attr)
+                if documentation_mode:
+                    value = key.get_default()
+                else:
+                    value = key.get_value()
+                setattr(self, attr, value)
                 self._defaulted.add(name)
 
     def __setattr__(self, attr: str, value: Any) -> None:

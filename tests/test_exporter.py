@@ -28,6 +28,7 @@ class TestJsonExporter:
         Test for the ``export`` method.
         """
         sample_config.raise_if_not_in_doc_mode = True
+        sample_config.foo.required = True
         exported_config = JsonExporter().export(sample_config)
         assert exported_config == dedent("""\
             {
@@ -56,6 +57,7 @@ class TestYamlExporter:
         Test for the ``export`` method.
         """
         sample_config.raise_if_not_in_doc_mode = True
+        sample_config.foo.required = True
         exported_config = YamlExporter().export(sample_config)
         assert exported_config == dedent("""\
             foo: null      # foo

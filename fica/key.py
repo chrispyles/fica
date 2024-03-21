@@ -90,6 +90,9 @@ class Key:
     factory: Optional[Callable[[], Any]]
     """a factory used to create the default value"""
 
+    required: bool
+    """whether the key is required to be specified by the user"""
+
     def __init__(
         self,
         description: Optional[str] = None,
@@ -101,6 +104,7 @@ class Key:
         enforce_subkeys: bool = False,
         name: Optional[str] = None,
         factory: Optional[Callable[[], Any]] = None,
+        required: bool = False,
     ) -> None:
         if type_ is not None:
             if not (isinstance(type_, Type) or (isinstance(type_, tuple) and \
@@ -133,6 +137,9 @@ class Key:
 
         if factory is not None and (default is not None or subkey_container is not None):
             raise ValueError("Cannot specify a factory with a default of subkey_container")
+        
+        if required and (default is not None or factory is not None):
+            raise ValueError('A required key cannot have a default value or factory')
 
         self.description = description
         self.default = default
@@ -143,6 +150,7 @@ class Key:
         self.enforce_subkeys = enforce_subkeys
         self.name = name
         self.factory = factory
+        self.required = required
 
     def get_description(self) -> Optional[str]:
         """
@@ -186,6 +194,7 @@ class Key:
         Returns:
             ``bool``: whether the default value will be used
         """
+        if self.required: return False
         return user_value is EMPTY
 
     def get_value(self, user_value: Any = EMPTY, require_valid_keys: bool = False) -> Any:
@@ -215,6 +224,9 @@ class Key:
                 return self.default
 
         else:
+            if self.required and user_value is EMPTY:
+                raise ValueError("Key is required but there is no user-specified value")
+
             if not ((self.type_ is None or isinstance(user_value, self.type_)) or \
                     (self.allow_none and user_value is None)):
                 raise TypeError("User-specified value is not of the correct type")
@@ -245,6 +257,8 @@ class Key:
         Returns:
             ``object``: the default value of the key.
         """
+        if self.required:
+            return None
         return self.get_value()
 
     def should_document_subkeys(self) -> bool:
