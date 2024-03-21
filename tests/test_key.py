@@ -24,6 +24,7 @@ def default_key_attrs():
         "subkey_container": None,
         "enforce_subkeys": False,
         "name": None,
+        "required": False,
     }
 
 
@@ -102,6 +103,9 @@ class TestKey:
         key = Key(type_=list, factory=factory)
         assert_object_attrs(key, {**default_key_attrs, "type_": list, "factory": factory})
 
+        key = Key(required=True)
+        assert_object_attrs(key, {**default_key_attrs, "required": True})
+
         # test errors
         with pytest.raises(TypeError):
             Key(type_=[int])
@@ -135,6 +139,12 @@ class TestKey:
 
         with pytest.raises(ValueError):
             Key(factory=factory, subkey_container=SubkeyValue)
+
+        with pytest.raises(ValueError):
+            Key(required=True, default=1)
+
+        with pytest.raises(ValueError):
+            Key(required=True, factory=lambda: [1])
 
     def test_get_value(self):
         """
@@ -198,6 +208,10 @@ class TestKey:
         assert v1 == v2
         assert v1 is not v2
 
+        key = Key(required=True)
+        value = key.get_value(1)
+        assert value == 1
+
         # test errors
         with pytest.raises(TypeError):
             value = Key(default=1, type_=(int, float)).get_value("quux")
@@ -207,6 +221,9 @@ class TestKey:
 
         with pytest.raises(ValueError):
             value = Key(subkey_container=SubkeyValue, enforce_subkeys=True).get_value(1)
+
+        with pytest.raises(ValueError):
+            value = Key(required=True).get_value()
 
     def test_should_document_subkeys(self):
         """
@@ -243,3 +260,8 @@ class TestKey:
         with mock.patch.object(key, "get_value") as mocked_get_value:
             assert key.get_default() == mocked_get_value.return_value
             mocked_get_value.assert_called_once_with()
+
+        key = Key(required=True)
+        with mock.patch.object(key, "get_value") as mocked_get_value:
+            assert key.get_default() == None
+            mocked_get_value.assert_not_called()
