@@ -8,8 +8,12 @@ on:
 
 jobs:
   build:
-
+    name: Test suite
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash -l {0}
 
     steps:
     - uses: actions/checkout@v2
@@ -24,7 +28,7 @@ jobs:
 
     - name: Run pytest
       run: |
-        mamba activate fica
+        micromamba activate fica
         make testcov
         coverage xml
 
