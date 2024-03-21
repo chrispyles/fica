@@ -14,19 +14,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - uses: mamba-org/setup-micromamba@v1
       with:
-        python-version: 3.8
-
-    - name: Install dependencies
-      run: |
-        $CONDA/bin/conda env update -f environment.yml -n base
+        environment-file: environment.yml
+        init-shell: >-
+          bash
+        cache-environment: true
+        cache-environment-key: requirements-${{ hashFiles('requirements*.txt') }}
 
     - name: Run pytest
       run: |
-        make testcov COVERAGE=$CONDA/bin/coverage
-        $CONDA/bin/coverage xml
+        mamba activate fica
+        make testcov
+        coverage xml
 
     - uses: codecov/codecov-action@v3
       with:
