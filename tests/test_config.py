@@ -214,3 +214,74 @@ class TestConfig:
 
         c.bar = 4
         assert c.get_user_config() == {"foo": 3, "baz": 4}
+
+    def test_inheritance(self):
+        """
+        Tests for ``Config`` inheritance.
+        """
+        class BValue(Config):
+            b1 = Key(default=1)
+
+        class A(Config):
+            a = Key()
+            b = Key()
+
+        class B(A):
+            b = Key(subkey_container=BValue)
+            c = Key()
+            d = Key(default=2)
+            e = Key()
+
+        class C(B):
+            c = Key()
+            d = Key()
+            e = Key(default=3)
+            f = Key()
+
+        default_attrs = {
+            "A": {
+                "a": None,
+                "b": None,
+            },
+            "B": {
+                "a": None,
+                "b": BValue(),
+                "c": None,
+                "d": 2,
+                "e": None,
+            },
+            "C": {
+                "a": None,
+                "b": BValue(),
+                "c": None,
+                "d": None,
+                "e": 3,
+                "f": None,
+            },
+        }
+
+        for c, attrs in [
+            (A(), default_attrs["A"]),
+            (B(), default_attrs["B"]),
+            (C(), default_attrs["C"]),
+        ]:
+            for a, v in attrs.items():
+                assert getattr(c, a) == v
+
+        for uc, cc, attrs in [
+            ({"a": -3, "b": {"b1": "b1"}, "c": 1}, B, default_attrs["B"]),
+            ({"a": -3, "c": 1, "d": -1, "e": -2}, C, default_attrs["C"]),
+        ]:
+            c = cc(uc)
+            attrs = {**attrs, **uc}
+            for a, v in attrs.items():
+                if a == "b" and isinstance(v, dict):
+                    v = BValue(v)
+                assert getattr(c, a) == v
+
+            c.update({"a": -10, "b": {"b1": "b2"}})
+            attrs = {**attrs, "a": -10, "b": BValue({"b1": "b2"})}
+            for a, v in attrs.items():
+                if a == "b" and isinstance(v, dict):
+                    v = BValue(v)
+                assert getattr(c, a) == v

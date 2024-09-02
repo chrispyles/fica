@@ -64,38 +64,7 @@ class Config:
 
         self._defaulted = set()
         self._require_valid_keys = require_valid_keys
-
-        cls, names_to_attrs, seen_attrs = type(self), self._get_names_to_attrs(), set()
-        for name, v in user_config.items():
-            if name in names_to_attrs:
-                try:
-                    key = getattr(cls, names_to_attrs[name])
-                    value = key.get_value(v, require_valid_keys=self._require_valid_keys)
-                    if key.use_default(v):
-                        self._defaulted.add(name)
-                except Exception as e:
-                    # wrap the error message with one containing the key name
-                    if isinstance(e, ConfigProcessingException):
-                        raise ConfigProcessingException.from_child(name, e)
-                    else:
-                        raise ConfigProcessingException(name, e)
-
-                setattr(self, names_to_attrs[name], value)
-                seen_attrs.add(names_to_attrs[name])
-
-            elif self._require_valid_keys:
-                raise ValueError(f"Unexpected key found in config: '{name}'")
-
-        # set values for unspecified keys
-        for attr, name in self._get_attrs_to_names().items():
-            if attr not in seen_attrs:
-                key = getattr(cls, attr)
-                if documentation_mode:
-                    value = key.get_default()
-                else:
-                    value = key.get_value()
-                setattr(self, attr, value)
-                self._defaulted.add(name)
+        self._populate(user_config, True, documentation_mode)
 
     def __setattr__(self, attr: str, value: Any) -> None:
         super().__setattr__(attr, value)
@@ -115,49 +84,91 @@ class Config:
             ``Exception``: if an error occurs while parsing the specified value for a key
         """
         self._validate_user_config(user_config)
+        self._populate(user_config, False)
 
-        cls, names_to_attrs = type(self), self._get_names_to_attrs()
+    def _populate(
+        self,
+        user_config: Dict[str, Any],
+        populate_defaults: bool,
+        documentation_mode: bool = False,
+    ):
+        """
+        """
+        cls, names_to_attrs, seen_attrs = type(self), self._get_names_to_attrs(), set()
+
+        # go through attributes on this class and every Config subclass it inherits from to find all
+        # keys
         for name, v in user_config.items():
-            if name in names_to_attrs:
-                try:
-                    if isinstance(getattr(self, names_to_attrs[name]), Config) and \
-                            isinstance(v, dict):
-                        getattr(self, names_to_attrs[name]).update(v)
+            if name not in names_to_attrs:
+                if self._require_valid_keys:
+                    raise ValueError(f"Unexpected key found in config: '{name}'")
+                else:
+                    continue
 
-                    else:
-                        key = getattr(cls, names_to_attrs[name])
-                        value = key.get_value(v, require_valid_keys=self._require_valid_keys)
+            attr  = names_to_attrs[name]
+            try:
+                if isinstance(getattr(self, attr), Config) and \
+                        isinstance(v, dict):
+                    getattr(self, names_to_attrs[name]).update(v)
 
-                        setattr(self, names_to_attrs[name], value)
-                        if key.use_default(v):
-                            self._defaulted.add(name)
-                        elif name in self._defaulted:
-                            self._defaulted.remove(name)
+                else:
+                    key = getattr(cls, attr)
+                    value = key.get_value(v, require_valid_keys=self._require_valid_keys)
+                    setattr(self, attr, value)
 
-                except Exception as e:
-                    # wrap the error message with one containing the key name
-                    if isinstance(e, ConfigProcessingException):
-                        raise ConfigProcessingException.from_child(name, e)
-                    else:
-                        raise ConfigProcessingException(name, e)
+                if key.use_default(v):
+                    self._defaulted.add(name)
+                elif name in self._defaulted:
+                    self._defaulted.remove(name)
 
-            elif self._require_valid_keys:
-                raise ValueError(f"Unexpected key found in config: '{name}'")
+            except Exception as e:
+                # wrap the error message with one containing the key name
+                if isinstance(e, ConfigProcessingException):
+                    raise ConfigProcessingException.from_child(name, e)
+                else:
+                    raise ConfigProcessingException(name, e)
+
+            seen_attrs.add(attr)
+
+        if not populate_defaults:
+            return
+
+        # set values for unspecified keys
+        for name, attr in names_to_attrs.items():
+            if attr in seen_attrs:
+                continue
+
+            key = getattr(cls, attr)
+            if documentation_mode:
+                value = key.get_default()
+            else:
+                value = key.get_value()
+            setattr(self, attr, value)
+            self._defaulted.add(name)
+
+    @property
+    def _config_classes(self):
+        """"""
+        return tuple(c for c in type(self).__mro__ if issubclass(c, Config) and c is not Config)
 
     def _get_attrs_to_names(self) -> Dict[str, str]:
         """
         Get a dictionary mapping class attribute names to key names in the user config.
         """
-        cls = type(self)
+        res = {}
+        # iterate over config classes in reverse order so that attr collisions are resolved in favor
+        # of the lower class in the MRO
+        for cls in self._config_classes[::-1]:
+            # iterate through cls.__dict__ because dicts maintain insertion order, and will
+            # therefore be ordered in the same order as the fields were declared
+            res.update({
+                a: getattr(cls, a).get_name(a)
+                for a
+                in cls.__dict__
+                if isinstance(getattr(cls, a), Key)
+            })
 
-        # iterate through cls.__dict__ because dicts maintain insertion order, and will therefore be
-        # ordered in the same order as the fields were declared
-        return {
-            a: getattr(cls, a).get_name(a)
-            for a
-            in cls.__dict__
-            if isinstance(getattr(cls, a), Key)
-        }
+        return res
 
     def _get_names_to_attrs(self) -> Dict[str, str]:
         """
