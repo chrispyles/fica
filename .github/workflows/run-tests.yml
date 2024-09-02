@@ -30,9 +30,7 @@ jobs:
       run: |
         micromamba activate fica
         make testcov
-        coverage xml
+        coverage lcov -i
 
-    - uses: codecov/codecov-action@v3
-      with:
-        fail_ci_if_error: true
-        verbose: true
+    - name: Coveralls
+      uses: coverallsapp/github-action@v2
