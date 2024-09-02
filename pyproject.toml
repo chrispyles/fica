@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "fica"
+version = "0.4.0"
+description = "User configuration manager and documenter"
+authors = ["Chris Pyles <cpyles@berkeley.edu>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/chrispyles/fica"
+repository = "https://github.com/chrispyles/fica"
+documentation = "https://fica.readthedocs.io/"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+docutils = "*"
+pyyaml = "*"
+sphinx = "*"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+coverage = "*"
+numpy = "*"
+pytest = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

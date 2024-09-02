@@ -32,6 +32,7 @@ jobs:
       - name: Update version
         run: |
           echo '__version__ = "${{ github.event.inputs.version }}"' > fica/version.py
+          poetry version ${{ github.event.inputs.version }}
 
       - name: Commit and push
         run: |

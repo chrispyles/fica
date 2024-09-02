@@ -6,19 +6,11 @@ any updates. Make sure to update the changelog with any information about the co
 
 ## Environment Setup
 
-To set up an environment for working on `fica`, we recommend using 
-[Conda](https://docs.conda.io/en/latest/miniconda.html). This repo contains an 
-[`environment.yml`](environment.yml) file which defines all of the requirements for a development
-environment.
-
-Running
+To install development dependencies, use [`poetry`](https://python-poetry.org/):
 
 ```
-conda env create -f environment.yml
+poetry install
 ```
-
-will create a conda environment called `fica` with the necessary packages installed for Python.
-
 
 ## Running Tests
 

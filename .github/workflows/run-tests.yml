@@ -16,21 +16,21 @@ jobs:
         shell: bash -l {0}
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - uses: mamba-org/setup-micromamba@v1
-      with:
-        environment-file: environment.yml
-        init-shell: >-
-          bash
-        cache-environment: true
-        cache-environment-key: requirements-${{ hashFiles('requirements*.txt') }}
+      - uses: liskin/gh-pipx@v1
+        with:
+          packages: >-
+            poetry
 
-    - name: Run pytest
-      run: |
-        micromamba activate fica
-        make testcov
-        coverage lcov -i
+      - name: Install dependencies
+        run: |
+          poetry install --with test
 
-    - name: Coveralls
-      uses: coverallsapp/github-action@v2
+      - name: Run pytest
+        run: |
+          make testcov
+          coverage lcov -i
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
