@@ -28,6 +28,13 @@ coverage = "*"
 numpy = "*"
 pytest = "*"
 
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+pydata-sphinx-theme = "*"
+sphinx = "*"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
