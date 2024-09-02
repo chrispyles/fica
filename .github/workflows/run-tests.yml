@@ -25,10 +25,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --with test
+          poetry install --no-root --with test
 
       - name: Run pytest
         run: |
+          poetry env use
           make testcov
           coverage lcov -i
 
