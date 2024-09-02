@@ -40,6 +40,7 @@ jobs:
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
+          python -m venv create .venv
           poetry install --no-interaction --no-root --with test
 
       - name: Run pytest
