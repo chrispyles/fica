@@ -15,22 +15,36 @@ jobs:
       run:
         shell: bash -l {0}
 
+    # steps involving poetry copied from https://github.com/marketplace/actions/install-poetry-action#testing
     steps:
       - uses: actions/checkout@v2
 
-      - uses: liskin/gh-pipx@v1
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v5
         with:
-          packages: >-
-            poetry
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-path: .venv
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
-          poetry env use 3
-          poetry install --no-root --with test
+          poetry install --no-interaction --no-root --with test
 
       - name: Run pytest
         run: |
-          poetry env use 3
+          source .venv/bin/activate
           make testcov
           coverage lcov -i
 
