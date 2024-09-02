@@ -29,7 +29,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          poetry env use
+          poetry env use 3
           make testcov
           coverage lcov -i
 
