@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1 - 2024-09-16
+
+* Fixed `UnboundLocalError` in `fica.Config`
+
 ## v0.4.0 - 2024-09-02
 
 * Updated `fica.Key` to assume that `factory` returns a value of the correct type if `type_` is specified per [#33](https://github.com/chrispyles/fica/issues/33)

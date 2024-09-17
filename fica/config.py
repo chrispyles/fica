@@ -107,12 +107,12 @@ class Config:
 
             attr  = names_to_attrs[name]
             try:
+                key = getattr(cls, attr)
                 if isinstance(getattr(self, attr), Config) and \
                         isinstance(v, dict):
                     getattr(self, names_to_attrs[name]).update(v)
 
                 else:
-                    key = getattr(cls, attr)
                     value = key.get_value(v, require_valid_keys=self._require_valid_keys)
                     setattr(self, attr, value)
 
