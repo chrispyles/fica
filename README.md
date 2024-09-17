@@ -14,7 +14,7 @@ configurations. With it, you can create dictionaries of configurations that cont
 and descriptions for easily configuring applications with user input and documenting available
 configurations and their defaults.
 
-`fica` is compatible with Python 3.8+.
+`fica` is compatible with Python 3.9+.
 
 
 ## Documentation
