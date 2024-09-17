@@ -41,6 +41,7 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b release
           git add fica/version.py
+          git add pyproject.toml
           git commit -m 'release v${{ github.event.inputs.version }}'
           git push --set-upstream origin release
 
@@ -80,6 +81,5 @@ jobs:
             --head chrispyles:release \
             --label "release" \
             --reviewer chrispyles \
-            --milestone "v${{ github.event.inputs.version }}" \
             --title "Release v${{ github.event.inputs.version }}" \
             --body "Updates from the release of version ${{ github.event.inputs.version }}"
