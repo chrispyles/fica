@@ -20,6 +20,12 @@ docutils = "*"
 pyyaml = "*"
 sphinx = "*"
 
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+twine = "^5.1.1"
+
 [tool.poetry.group.test]
 optional = true
 
